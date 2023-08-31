@@ -1,0 +1,72 @@
+{
+  "artwork": {
+    "type": "BOOLEAN",
+    "config": {
+      "label": "Obra física?",
+      "required": "NEED_CONFIRMATION"
+    }
+  },
+  "artist": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Artista(s)",
+      "required": "NEED_CONFIRMATION"
+    }
+  },
+  "gallery": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Galeria",
+      "required": "NEED_CONFIRMATION"
+    }
+  },
+  "finalizationDate": {
+    "type": "NUMERIC_TEXTFIELD",
+    "config": {
+      "label": "Ano de finalização da obra",
+      "required": true
+    }
+  },
+  "series": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Série",
+      "required": "NEED_CONFIRMATION"
+    }
+  },
+  "imageCredit": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Crédito da imagem",
+      "required": false
+    }
+  },
+  "movement": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Movimento",
+      "required": false
+    }
+  },
+  "frameDetails": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Detalhes da moldura",
+      "required": true
+    }
+  },
+  "technique": {
+    "type": "TEXTFIELD",
+    "config": {
+      "label": "Técnica",
+      "required": "NEED_CONFIRMATION"
+    }
+  },
+  "dimensions": {
+    "type": "DIMENSIONS_3D",
+    "config": {
+      "label": "Dimensões da obra (em centímetros)",
+      "required": "NEED_CONFIRMATION"
+    }
+  }
+}

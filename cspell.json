@@ -1,0 +1,15 @@
+{
+    "version": "0.2",
+    "ignorePaths": [
+        "./src/modules/database/migrations/**"
+    ],
+    "dictionaryDefinitions": [],
+    "dictionaries": [],
+    "words": [
+        
+    ],
+    "ignoreWords": [
+       
+    ],
+    "import": []
+}

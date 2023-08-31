@@ -1,0 +1,12 @@
+{
+  "src/**/*.ts?(x)": [
+    "npm run format",
+    "npm run lint",
+    "bash -c 'npm run check-types'",
+    "bash -c 'npm run build'"
+  ],
+  ".env.example": [
+    "npm run infra:gen",
+    "git add infra/generated/."
+  ]
+}

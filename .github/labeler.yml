@@ -1,0 +1,15 @@
+# Add 'repo' label to any root file changes
+repo:
+- '*'
+
+test:
+- test/*
+
+source:
+- any: ['src/**/*', '!src/docs/*']
+
+important:
+- any: ['package.json', '.env.example', 'Dockerfile', '.nvmrc', 'tsconfig.json']
+
+ci:
+- any: ['.github/*', 'Dockerfile', 'scripts/check-build-env.mjs']

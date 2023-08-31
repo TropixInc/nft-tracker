@@ -1,0 +1,55 @@
+name: PR Compliance
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, ready_for_review]
+
+# Action should have write permission to make updates to PR
+permissions:
+  pull-requests: write
+
+jobs:
+  pr-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mtfoley/pr-compliance-action@main
+        with:
+          title-check-enable: false
+          body-auto-close: false
+          body-comment: false
+          # all inputs are optional
+          watch-files: |
+            package.json
+            .env.example
+            Dockerfile
+            .nvmrc
+            tsconfig.json
+  triage:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    needs: pr-compliance
+    steps:
+    - uses: actions/labeler@v4
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: pr-compliance
+    steps:
+      - name: Interpolate PR Message
+        id: pr_message
+        run: |
+          echo "::set-output name=pr_message::[{\"color\":39423,\"title\":\"${{ github.event.pull_request.title }}\",\"url\":\"${{ github.event.pull_request.html_url }}\",\"author\":{\"name\":\"${{ github.event.pull_request.user.login}}\",\"icon_url\":\"${{ github.event.pull_request.user.avatar_url}}\",\"url\":\"${{ github.event.pull_request.user.html_url}}\"},\"description\":\"Branch: ${{ github.event.pull_request.base.ref }}\",\"timestamp\":\"${{ github.event.pull_request.updated_at }}\",\"footer\":{\"text\":\"${{ github.event.repository.full_name }}\",\"icon_url\":\"${{ github.event.repository.owner.avatar_url }}\"}}]"
+      - name: Discord notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_CH_BACKEND }}
+          DISCORD_USERNAME: 'W3bLocker'
+          DISCORD_AVATAR: 'https://i.imgur.com/BPnQGGY.jpeg'
+          DISCORD_EMBEDS: ${{ steps.pr_message.outputs.pr_message }}
+         
+        uses: Ilshidur/action-discord@master
+        with:
+          args: ''

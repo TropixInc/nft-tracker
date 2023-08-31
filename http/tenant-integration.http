@@ -1,0 +1,73 @@
+
+@baseUrl = http://{{$dotenv HOST}}:{{$dotenv PORT}}
+@tenantId = {{$dotenv LOCAL_TENANT_ID}}
+@contentType = application/json
+
+# @name login
+POST {{baseUrl}}/auth/signin
+Content-Type: {{contentType}}
+
+{
+  "email": "{{$dotenv LOCAL_AUTH_EMAIL}}",
+  "password": "{{$dotenv LOCAL_AUTH_PASS}}",
+  "tenantId": "{{tenantId}}"
+}
+
+###
+
+@authToken = {{login.response.body.token}}
+@refreshToken = {{login.response.body.refreshToken}}
+
+# @name get-user-profile
+GET {{baseUrl}}/users/profile
+Content-Type: {{contentType}}
+accept: application/json
+Authorization: Bearer {{authToken}}
+
+###
+
+@authToken = {{login.response.body.token}}
+@refreshToken = {{login.response.body.refreshToken}}
+
+# @name createTenantIntegration
+POST {{baseUrl}}/tenant-integration/{{tenantId}}/
+Content-Type: {{contentType}}
+accept: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "fromTenantId": "e8a9814e-18a1-4f52-b6ca-c15f0ae2294a",
+  "toTenantId": "00000000-0000-0000-0000-000000000001"
+}
+
+###
+
+@authToken = {{login.response.body.token}}
+@refreshToken = {{login.response.body.refreshToken}}
+
+# @name createTenantUserIntegration
+POST {{baseUrl}}/tenant-user-integration/{{tenantId}}/
+Content-Type: {{contentType}}
+accept: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "tenantIntegrationId": "bc9dbfae-b760-4d16-8e47-4a4c9382efad",
+  "toUserId": "45e7d114-b528-4060-bc0b-397d3f5703f4"
+}
+
+###
+
+@authToken = {{login.response.body.token}}
+@refreshToken = {{login.response.body.refreshToken}}
+
+# @name acceptTenantUserIntegration
+PATCH {{baseUrl}}/tenant-user-integration/{{tenantId}}/48113544-d9c7-4b9e-8ef5-f02e4889a8f6/accept
+Content-Type: {{contentType}}
+accept: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "tenantIntegrationId": "bc9dbfae-b760-4d16-8e47-4a4c9382efad",
+  "toUserId": "45e7d114-b528-4060-bc0b-397d3f5703f4"
+}

@@ -1,0 +1,11 @@
+.dockerignore
+node_modules
+npm-debug.log
+Dockerfile
+.git
+.gitignore
+dist
+.husky
+.vscode
+.github
+infra/generated
