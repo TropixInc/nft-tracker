@@ -1,6 +1,6 @@
-import { OrderByEnum } from '@tropixinc/pixchain-sdk';
 import { PaginationDto } from 'common/dtos/pagination.dto';
 import { FindOptionsRelations, FindOptionsWhere } from 'typeorm';
+import { OrderByEnum } from 'common/enums/orderBy.enum';
 
 export function getPaginationQueryDefault<Entity, T extends PaginationDto, S extends string>(
   pagination: T,

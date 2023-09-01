@@ -6,7 +6,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoggerContext } from '@tropixinc/pixchain-nestjs-helpers';
 import Ajv from 'ajv';
 import { createSchema } from 'genson-js';
 import { Get, JsonPrimitive } from 'type-fest';
@@ -19,6 +18,7 @@ import { compile } from 'json-schema-to-typescript';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigKeys, ConfigStorage } from './interfaces/schema-generated';
+import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
 
 import { pascalCase } from 'change-case';
 

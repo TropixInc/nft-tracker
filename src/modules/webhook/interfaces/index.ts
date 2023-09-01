@@ -1,8 +1,8 @@
-export interface WebhookRequest<T = any> {
+export interface WebhookRequest {
   id: string;
   url: string;
   headers?: Record<string, string>;
-  body: T;
+  body: Record<string, any>;
   method: 'post' | 'put' | 'get' | 'delete';
   timeout?: number;
   meta?: Record<string, any>;

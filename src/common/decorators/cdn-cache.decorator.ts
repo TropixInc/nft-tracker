@@ -1,5 +1,6 @@
 import { SecondsTTL } from 'src/common/enums';
-import { applyDecorators, UseInterceptors, CacheInterceptor, CacheTTL, Header } from '@nestjs/common';
+import { applyDecorators, UseInterceptors, Header } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 
 export function CdnCache(ttl: SecondsTTL) {
   return applyDecorators(

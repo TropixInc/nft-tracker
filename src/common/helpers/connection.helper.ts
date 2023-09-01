@@ -1,4 +1,3 @@
-import { ClientOpts } from '@nestjs/microservices/external/redis.interface';
 import * as net from 'net';
 import { URL } from 'url';
 
@@ -24,20 +23,20 @@ export function parseRedisURL(url: string) {
   // https://www.iana.org/assignments/uri-schemes/prov/redis
   const { hostname, port, protocol, username, password, pathname } = new URL(url);
 
-  const parsed: RedisClientOptions & { socket: ClientOpts } = {
+  const parsed: RedisClientOptions & { socket: any } = {
     socket: {
       host: hostname,
     },
   };
 
   if (protocol === 'rediss:') {
-    (parsed.socket as ClientOpts).tls = true;
+    (parsed.socket as any).tls = true;
   } else if (protocol !== 'redis:') {
     throw new TypeError('Invalid protocol');
   }
 
   if (port) {
-    (parsed.socket as ClientOpts).port = Number(port);
+    (parsed.socket as any).port = Number(port);
   }
 
   if (username) {

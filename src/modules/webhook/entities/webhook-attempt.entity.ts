@@ -11,7 +11,7 @@ export class WebhookAttemptEntity extends BaseEntity implements WebhookAttempt {
   headers?: Record<string, string>;
 
   @Column({ type: 'jsonb', nullable: true })
-  body: Record<string, any> | null;
+  body: Record<string, any>;
 
   @Column({ type: 'varchar', nullable: false })
   method: 'post' | 'put' | 'get' | 'delete';

@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-identical-functions */
-import { Controller, Get, Logger, Res, ServiceUnavailableException } from '@nestjs/common';
+import { Controller, Get, Logger, Res, ServiceUnavailableException, Response } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
 import {
@@ -103,8 +103,8 @@ export class HealthController extends PrometheusController {
 
   @IsPublic()
   @Get('metrics')
-  async index(@Res() response: any) {
-    await super.index(response);
+  async index(@Res({ passthrough: true }) response: Response) {
+    return super.index(response);
   }
 
   private indicators(): Indicators {

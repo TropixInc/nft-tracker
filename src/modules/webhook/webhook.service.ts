@@ -22,13 +22,13 @@ export class WebhookService {
    * @param data - The data to send to the webhook.
    * @returns The webhook request
    */
-  async send<T>(data: SetOptional<WebhookRequest<T>, 'id' | 'method'>): Promise<WebhookAttemptEntity> {
+  async send(data: SetOptional<WebhookRequest, 'id' | 'method'>): Promise<WebhookAttemptEntity> {
     this.logger.verbose(`Sending webhook: ${JSON.stringify(data)}`);
     if (!isURL(data.url, { require_tld: false })) {
       throw new Error(`Invalid URL: ${data.url}`);
     }
 
-    const webhook: WebhookRequest<T> = {
+    const webhook: WebhookRequest = {
       ...data,
       id: data.id || UUIDv4(),
       method: data.method || 'post',
@@ -72,11 +72,12 @@ export class WebhookService {
    * @param webhook - WebhookRequest<T>
    * @param {WebhookResponse} response - WebhookResponse
    */
-  async logAttempt<T = any>(webhook: WebhookRequest<T>, response: WebhookResponse): Promise<WebhookAttemptEntity> {
-    return await this.webhookAttemptRepository.save({
+  async logAttempt(webhook: WebhookRequest, response: WebhookResponse): Promise<WebhookAttemptEntity> {
+    await this.webhookAttemptRepository.save({
       ...webhook,
       ...response,
     });
+    return this.webhookAttemptRepository.findOneOrFail({ where: { id: webhook.id } });
   }
 
   async retry(id: string): Promise<void> {

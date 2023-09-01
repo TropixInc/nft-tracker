@@ -1,4 +1,4 @@
-import { CacheManagerOptions, CacheModule, MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { LoggerModule } from 'nestjs-pino';
 import { Options } from 'pino-http';
+import { CacheModule, CacheManagerOptions } from '@nestjs/cache-manager';
 
 import { AppConfig, getAppConfig, validationSchema } from 'config/app.config';
 import { AppController } from './app.controller';
@@ -18,7 +19,6 @@ import { HealthModule } from 'modules/health/health.module';
 
 import { QueueModule } from 'modules/queue/queue.module';
 
-import { ClientOpts } from '@nestjs/microservices/external/redis.interface';
 import { ConfigurationModule } from 'modules/configuration/configuration.module';
 import { RequestIpMiddleware } from 'common/middlewares/request-ip.middleware';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -43,7 +43,7 @@ import { ApplicationEnvEnum } from 'common/enums';
       limit: 5000,
     }),
     TypeOrmModule.forRoot({ ...TypeOrmConfig, autoLoadEntities: true }),
-    CacheModule.registerAsync<ClientOpts>({
+    CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService<AppConfig, true>) => {
