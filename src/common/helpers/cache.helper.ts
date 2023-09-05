@@ -35,7 +35,7 @@ export const cacheResolver = async <T = any>(
 
   if (shouldCache) {
     const ttl = options.ttlResolver ? options.ttlResolver(result) : options.ttl;
-    const setCachePromise = cacheManager.set(cacheKey, result, ttl ? { ttl } : undefined);
+    const setCachePromise = cacheManager.set(cacheKey, result, ttl ? ttl : undefined);
     if (!options.asyncCaching) {
       await setCachePromise;
     }

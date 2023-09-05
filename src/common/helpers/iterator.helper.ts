@@ -1,7 +1,8 @@
 import { paginateRawAndEntities } from 'nestjs-typeorm-paginate';
 import { SelectQueryBuilder } from 'typeorm';
+import { ObjectLiteral } from 'typeorm/common/ObjectLiteral';
 
-export async function* asyncPaginateRawAndEntities<T>(
+export async function* asyncPaginateRawAndEntities<T extends ObjectLiteral>(
   queryBuilder: SelectQueryBuilder<T>,
   options: { limit: number } = { limit: 200 },
 ) {

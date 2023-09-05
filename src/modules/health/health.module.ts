@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
 import { makeGaugeProvider, PrometheusModule } from '@willsoto/nestjs-prometheus';
-import { ConfigService } from 'aws-sdk';
 import { DatabaseModule } from 'database/database.module';
 import { QueueModule } from 'modules/queue/queue.module';
 import { HealthController } from './health.controller';
@@ -16,7 +15,7 @@ import { PrometheusOptionsService } from './prometheus-options.service';
     QueueModule,
     PrometheusModule.registerAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
+      inject: [],
       useClass: PrometheusOptionsService,
     }),
   ],

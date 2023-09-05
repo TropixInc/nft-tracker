@@ -4,10 +4,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as redisStore from 'cache-manager-redis-store';
+import { redisStore } from 'cache-manager-redis-store';
+
 import { LoggerModule } from 'nestjs-pino';
 import { Options } from 'pino-http';
-import { CacheModule, CacheManagerOptions } from '@nestjs/cache-manager';
+import { CacheModule, CacheStore } from '@nestjs/cache-manager';
 
 import { AppConfig, getAppConfig, validationSchema } from 'config/app.config';
 import { AppController } from './app.controller';
@@ -46,16 +47,18 @@ import { ApplicationEnvEnum } from 'common/enums';
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<AppConfig, true>) => {
+      useFactory: async (configService: ConfigService<AppConfig, true>) => {
         const cacheManager = configService.get('cache_manager');
-        const config: CacheManagerOptions = {
-          store: redisStore.create({
-            url: cacheManager.url,
-            prefix: cacheManager.prefix,
-          }),
+        const store = await redisStore({
+          socket: {
+            host: cacheManager.host,
+            port: cacheManager.port,
+          },
+          password: cacheManager.password,
+        });
+        return {
+          store: store as unknown as CacheStore,
         };
-
-        return config;
       },
       isGlobal: true,
     }),
@@ -67,7 +70,6 @@ import { ApplicationEnvEnum } from 'common/enums';
 
         const pinoConfig: { pinoHttp: Options; exclude: any[] } = {
           pinoHttp: {
-            prettifier: isDevelop,
             level: logLevel,
             autoLogging: false,
             quietReqLogger: true,
