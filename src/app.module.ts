@@ -39,10 +39,12 @@ import { ApplicationEnvEnum } from 'common/enums';
       cache: true,
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot({
-      ttl: 60,
-      limit: 5000,
-    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 5000,
+      },
+    ]),
     TypeOrmModule.forRoot({ ...TypeOrmConfig, autoLoadEntities: true }),
     CacheModule.registerAsync({
       imports: [ConfigModule],

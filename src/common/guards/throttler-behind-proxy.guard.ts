@@ -4,7 +4,7 @@ import { CustomRequest } from 'common/interfaces';
 
 @Injectable()
 export class ThrottlerBehindProxyGuard extends ThrottlerGuard {
-  protected getTracker(req: CustomRequest): string {
-    return req.clientIp || req.ips.length ? req.ips[0] : req.ip; // individualize IP extraction to meet your own needs
+  protected async getTracker(req: CustomRequest): Promise<string> {
+    return req.ips.length ? req.ips[0] : req.ip; // individualize IP extraction to meet your own needs
   }
 }

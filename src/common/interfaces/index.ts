@@ -26,6 +26,7 @@ export interface PaginatedResult<T> {
 
 export interface CustomRequest<T = any> extends Request {
   body: T;
+  ips: string[];
 }
 
 export interface HttpExceptionResponse {
