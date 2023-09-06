@@ -44,6 +44,7 @@
     "infra:gen": "npx zx scripts/generate-env-change.mjs"
   },
   "dependencies": {
+    "@ethersproject/constants": "^5.7.0",
     "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.10",
     "@nestjs/axios": "3.0.0",
     "@nestjs/bull": "10.0.1",
@@ -73,6 +74,7 @@
     "class-validator": "^0.14.0",
     "date-fns": "^2.30.0",
     "dotenv": "^16.3.1",
+    "ethers": "^6.7.1",
     "fast-glob": "3.3.1",
     "genson-js": "0.0.8",
     "handlebars": "^4.7.8",

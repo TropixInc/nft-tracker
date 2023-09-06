@@ -1,6 +1,18 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsUUID } from 'class-validator';
 import { SetOptional } from 'type-fest';
 
 export abstract class EntityDtoMapper<M extends { id?: string }, E extends { id?: string }> {
+  @ApiProperty({ type: String, required: true, format: 'uuid' })
+  @IsUUID()
+  id: string;
+
+  @ApiProperty({ type: Date })
+  createdAt: Date;
+
+  @ApiProperty({ type: Date })
+  updatedAt: Date;
+
   constructor(attributes: M) {
     Object.assign(this, attributes);
   }

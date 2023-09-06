@@ -26,6 +26,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { UUIDHelper } from 'common/helpers/uuid.helper';
 import { WebhookModule } from 'modules/webhook/webhook.module';
 import { ApplicationEnvEnum } from 'common/enums';
+import { ContractModule } from './modules/contracts/contract.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { ApplicationEnvEnum } from 'common/enums';
     HealthModule,
     DatabaseModule,
     WebhookModule,
+    ContractModule,
   ],
   controllers: [AppController],
   providers: [
