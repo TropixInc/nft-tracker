@@ -27,6 +27,7 @@ import { UUIDHelper } from 'common/helpers/uuid.helper';
 import { WebhookModule } from 'modules/webhook/webhook.module';
 import { ApplicationEnvEnum } from 'common/enums';
 import { ContractModule } from './modules/contracts/contract.module';
+import { BlockchainModule } from './modules/blockchain/blockchain.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { ContractModule } from './modules/contracts/contract.module';
     DatabaseModule,
     WebhookModule,
     ContractModule,
+    BlockchainModule,
   ],
   controllers: [AppController],
   providers: [

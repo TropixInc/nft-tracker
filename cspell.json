@@ -6,10 +6,8 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
-        
+        "Numberish"
     ],
-    "ignoreWords": [
-       
-    ],
+    "ignoreWords": [],
     "import": []
 }

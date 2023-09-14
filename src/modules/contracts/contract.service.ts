@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { runTransaction } from 'src/common/helpers/transaction.helper';
 import { DatabaseFunctionOptions } from 'src/common/interfaces';
 import { ILike, Repository } from 'typeorm';
+import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractEntity, ContractModel } from './entities/contract.entity';
 import { ContractAlreadyExistsException, ContractNotFoundException } from './exceptions';
@@ -14,20 +15,21 @@ export class ContractService {
   constructor(
     @InjectRepository(ContractEntity)
     private repository: Repository<ContractEntity>,
+    private eRC721Provider: ERC721Provider,
   ) {}
 
   async create(dto: CreateContractDto): Promise<ContractModel> {
     if (await this.findOneByAddressAndChainId(dto.address, dto.chainId)) {
       throw new ContractAlreadyExistsException(dto.address, dto.chainId);
     }
+    const instance = await this.eRC721Provider.create(dto.address, dto.chainId);
     const contract = this.repository.create({
       address: dto.address,
       chainId: dto.chainId,
       cacheMedia: dto.cacheMedia,
-      // TODO: get name, symbol, totalSupply from contract
-      name: '',
-      symbol: '',
-      totalSupply: '',
+      name: await instance.name(),
+      symbol: await instance.symbol(),
+      totalSupply: await instance.totalSupply(),
     });
     return this.repository.save(contract);
   }
