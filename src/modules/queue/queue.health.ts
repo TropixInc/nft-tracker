@@ -8,9 +8,13 @@ import { LocalQueueEnum } from './enums';
 export class QueueHealthIndicator extends HealthIndicator {
   queues: Map<string, Queue> = new Map();
 
-  constructor(@InjectQueue(LocalQueueEnum.WEBHOOK) private readonly webhookQueue: Queue) {
+  constructor(
+    @InjectQueue(LocalQueueEnum.Webhook) private readonly webhookQueue: Queue,
+    @InjectQueue(LocalQueueEnum.TokenJob) private readonly tokenJobQueue: Queue,
+  ) {
     super();
     this.queues.set(webhookQueue.name, webhookQueue);
+    this.queues.set(tokenJobQueue.name, tokenJobQueue);
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {

@@ -4,7 +4,7 @@ import { AppConfig } from 'config/app.config';
 import { QueueConfigEnum } from './enums';
 import { parseRedisURL } from 'common/helpers/connection.helper';
 
-export const LocalConfig = BullModule.forRootAsync(QueueConfigEnum.LOCAL, {
+export const LocalConfig = BullModule.forRootAsync(QueueConfigEnum.Local, {
   imports: [ConfigModule],
   useFactory: (configService: ConfigService<AppConfig, true>) => {
     const redisConfig = parseRedisURL(configService.get('queue_url'));

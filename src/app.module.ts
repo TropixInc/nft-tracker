@@ -28,6 +28,7 @@ import { WebhookModule } from 'modules/webhook/webhook.module';
 import { ApplicationEnvEnum } from 'common/enums';
 import { ContractModule } from './modules/contracts/contract.module';
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
+import { TokensModule } from './modules/tokens/tokens.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { BlockchainModule } from './modules/blockchain/blockchain.module';
     WebhookModule,
     ContractModule,
     BlockchainModule,
+    TokensModule,
   ],
   controllers: [AppController],
   providers: [

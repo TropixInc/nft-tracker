@@ -23,13 +23,16 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import v8 from 'node:v8';
 import { LocalQueueEnum } from 'modules/queue/enums';
 
-const LOCAL_WEBHOOK_KEY = `${LocalQueueEnum.WEBHOOK}_queue` as const;
+const LOCAL_WEBHOOK_KEY = `${LocalQueueEnum.Webhook}_queue` as const;
+const LOCAL_TOKEN_JOB_KEY = `${LocalQueueEnum.TokenJob}_queue` as const;
+
 interface Indicators {
   migration: () => Promise<HealthIndicatorResult>;
   database: () => Promise<HealthIndicatorResult>;
   memory_heap: () => Promise<HealthIndicatorResult>;
   memory_rss_aloc: () => Promise<HealthIndicatorResult>;
   [LOCAL_WEBHOOK_KEY]: () => Promise<HealthIndicatorResult>;
+  [LOCAL_TOKEN_JOB_KEY]: () => Promise<HealthIndicatorResult>;
 }
 
 function getMaxMemory(): number {
@@ -113,7 +116,8 @@ export class HealthController extends PrometheusController {
       database: () => this.db.pingCheck('database', { timeout: 5000 }),
       memory_heap: () => this.memoryHealthIndicator.checkHeap('memory_heap', MAX_MEMORY_HEAP),
       memory_rss_aloc: () => this.memoryHealthIndicator.checkRSS('memory_rss_aloc', MAX_MEMORY_ALOC),
-      [LOCAL_WEBHOOK_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.WEBHOOK),
+      [LOCAL_WEBHOOK_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.Webhook),
+      [LOCAL_TOKEN_JOB_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.TokenJob),
     };
   }
 

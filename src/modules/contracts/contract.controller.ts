@@ -7,7 +7,7 @@ import { ChainId } from 'src/common/enums';
 import { AddressZero } from '@ethersproject/constants';
 import { ContractAlreadyExistsException } from './exceptions';
 import { CreateContractDto } from './dtos/create-contract.dto';
-import { ContractModel } from './entities/contract.entity';
+import { ContractModel } from './entities/contracts.entity';
 import { ContractDto } from './dtos/contract-entity.dto';
 
 @ApiTags('Contracts')

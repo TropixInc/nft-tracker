@@ -6,7 +6,13 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
-        "Numberish"
+        "dtos",
+        "ethersproject",
+        "ipfs",
+        "nanogiants",
+        "Numberish",
+        "radash",
+        "timestamptz"
     ],
     "ignoreWords": [],
     "import": []

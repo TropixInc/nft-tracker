@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BigNumberish } from 'ethers';
+import { isString } from 'lodash';
 import { ChainId } from 'src/common/enums';
+import { Optional } from 'src/common/interfaces';
 import { AppConfig } from 'src/config/app.config';
 import { EthereumService } from '../ethereum.service';
 import { ERC721 } from '../interfaces/ERC721';
@@ -43,7 +45,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     }
   }
 
-  async totalSupply(): Promise<string | null> {
+  async totalSupply(): Promise<Optional<string>> {
     try {
       const totalSupply = await this.contract.totalSupply();
       return totalSupply?.toString();
@@ -52,10 +54,11 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     }
   }
 
-  async tokenUri(tokenId: BigNumberish): Promise<string | null> {
+  async getTokenUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
+      console.error(error);
       return null;
     }
   }
@@ -66,5 +69,39 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     } catch (error) {
       return null;
     }
+  }
+
+  async getBaseUri(): Promise<Optional<string>> {
+    try {
+      return await this.contract.baseURI();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  formatTokenUri(tokenId: string, baseUri?: Optional<string>, tokenUri?: Optional<string>): string {
+    if (!tokenUri && !baseUri) {
+      return '';
+    }
+    if (!baseUri) {
+      return this.sanitizeTokenUri(tokenUri!);
+    }
+    let uri = baseUri;
+
+    if (isString(tokenUri) && baseUri.endsWith('/')) {
+      uri = `${baseUri}${tokenUri}`;
+    } else if (isString(tokenUri) && !baseUri.endsWith('/')) {
+      uri = `${baseUri}/${tokenUri}`;
+    }
+
+    if (uri.includes('{id}')) {
+      uri = uri.replace('{id}', tokenId);
+    }
+
+    return this.sanitizeTokenUri(uri);
+  }
+
+  sanitizeTokenUri(tokenUri: string): string {
+    return tokenUri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
   }
 }

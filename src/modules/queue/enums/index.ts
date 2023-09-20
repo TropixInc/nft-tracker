@@ -1,12 +1,18 @@
 export enum LocalQueueEnum {
-  WEBHOOK = 'webhook',
+  Webhook = 'webhook',
+  TokenJob = 'tokenJob',
 }
 
 export enum QueueConfigEnum {
-  LOCAL = 'local',
+  Local = 'local',
 }
 
 export enum WebhookJobs {
-  SYNC_WEBHOOK_FAILED = 'sync-webhook-failed',
-  RETRY_WEBHOOK = 'retry-webhook',
+  SyncWebhookFailed = 'syncWebhookFailed',
+  RetryWebhook = 'retryWebhook',
+}
+
+export enum TokenJobJobs {
+  ExecuteVerifyMint = 'executeVerifyMint',
+  CheckJobFrozen = 'checkJobFrozen',
 }

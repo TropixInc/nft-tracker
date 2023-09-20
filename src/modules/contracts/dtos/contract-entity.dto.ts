@@ -3,7 +3,7 @@ import { EntityDtoMapper } from 'common/dtos/entity-dto-mapper.dto';
 import { UUIDHelper } from 'common/helpers/uuid.helper';
 import { ChainId } from 'src/common/enums';
 import { SetOptional } from 'type-fest';
-import { ContractEntity as Entity, ContractModel as Model } from '../entities/contract.entity';
+import { ContractEntity as Entity, ContractModel as Model } from '../entities/contracts.entity';
 
 export class ContractDto extends EntityDtoMapper<Model, Entity> implements Model {
   @ApiProperty({ type: String })

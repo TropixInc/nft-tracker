@@ -16,8 +16,11 @@ export class QueueModule implements OnModuleInit, OnModuleDestroy {
   logger = new Logger(QueueModule.name);
   queues: Queue[];
 
-  constructor(@InjectQueue(LocalQueueEnum.WEBHOOK) webhookQueue: Queue) {
-    this.queues = [webhookQueue];
+  constructor(
+    @InjectQueue(LocalQueueEnum.Webhook) webhookQueue: Queue,
+    @InjectQueue(LocalQueueEnum.TokenJob) tokenJobQueue: Queue,
+  ) {
+    this.queues = [webhookQueue, tokenJobQueue];
   }
 
   /**

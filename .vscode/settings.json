@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
         "jose",
-        "sendinblue"
+        "nestjs",
+        "sendinblue",
+        "typeorm"
     ]
 }

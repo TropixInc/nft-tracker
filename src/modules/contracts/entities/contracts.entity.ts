@@ -27,7 +27,4 @@ export class ContractEntity extends BaseEntity implements Contract {
   cacheMedia: boolean;
 }
 
-/**
- * Must extract the interface from the entity because extending directly from the entity could add extra properties
- */
 export type ContractModel = Omit<ContractEntity, 'deletedAt'> & BaseEntity;
