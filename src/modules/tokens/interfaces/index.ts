@@ -13,7 +13,7 @@ export interface Token {
   imageRawUrl?: Optional<string>;
   imageGatewayUrl?: Optional<string>;
   chainId: ChainId;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface TokenJob {

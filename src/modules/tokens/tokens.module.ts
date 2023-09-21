@@ -9,11 +9,18 @@ import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenJobProcessor } from './queue/tokens-job.processor';
 import { TokensJobsVerifyMintService } from './tokens-jobs-verify-mint.service';
 import { TokensJobsService } from './tokens-jobs.service';
+import { TokensJobsFetchMetadataService } from './tokens-jobs-fetch-metadata.service';
 
 @Module({
   imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity]), BlockchainModule],
   controllers: [TokensController],
-  providers: [TokensService, TokensJobsService, TokensJobsVerifyMintService, TokenJobProcessor],
+  providers: [
+    TokensService,
+    TokensJobsService,
+    TokensJobsVerifyMintService,
+    TokensJobsFetchMetadataService,
+    TokenJobProcessor,
+  ],
   exports: [TokensService, TokensJobsService],
 })
 export class TokensModule {}

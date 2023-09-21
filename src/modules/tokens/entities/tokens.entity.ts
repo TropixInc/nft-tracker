@@ -36,7 +36,7 @@ export class TokenEntity extends BaseEntity implements Token {
   imageGatewayUrl?: Optional<string>;
 
   @Column({ nullable: true, type: 'jsonb', default: {} })
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> | null;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;

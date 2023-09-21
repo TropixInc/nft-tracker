@@ -160,6 +160,15 @@ export class TokensJobsVerifyMintService {
             tokenId: params.tokenId,
             tokenUri: params.tokenUri,
           });
+          await queryRunner.manager.save(TokenJobEntity, {
+            address: params.address,
+            chainId: params.chainId,
+            type: TokenJobType.FetchMetadata,
+            status: TokenJobStatus.Created,
+            executeAt: new Date(),
+            tokensIds: [params.tokenId],
+            tokensUris: [params.tokenUri],
+          });
         }
       },
       opts?.queryRunnerArg,
