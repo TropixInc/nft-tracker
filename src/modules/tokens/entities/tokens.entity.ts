@@ -6,7 +6,7 @@ import { lowercase } from 'src/modules/database/database.helpers';
 import { Optional } from 'src/common/interfaces';
 
 @Entity({ name: 'tokens' })
-@Index(['address', 'tokenId', 'chainId'], { unique: true })
+@Index('UNIQUE_TOKEN_ADDRESS_TOKEN_ID_CHAIN', ['address', 'tokenId', 'chainId'], { unique: true })
 export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: true, type: 'text' })
   name?: Optional<string>;
@@ -20,7 +20,7 @@ export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: false, type: 'integer' })
   chainId: ChainId;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'bigint' })
   tokenId: string;
 
   @Column({ nullable: false, type: 'text' })

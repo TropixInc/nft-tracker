@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { runTransaction } from 'src/common/helpers/transaction.helper';
 import { DatabaseFunctionOptions } from 'src/common/interfaces';
 import { ILike, Repository } from 'typeorm';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { TokenEntity, TokenModel } from './entities/tokens.entity';
 import { ContractNotFoundException } from './exceptions';
+import { ContractAddressTokensPaginateDto } from './dtos/contract-address-tokens-paginate.dto';
 
 @Injectable()
 export class TokensService {
@@ -19,8 +19,15 @@ export class TokensService {
     private eRC721Provider: ERC721Provider,
   ) {}
 
-  findByAddressAndChainId(pagination: PaginationDto): Promise<Pagination<TokenModel>> {
-    return paginate<TokenEntity>(this.repository, { page: pagination.page, limit: pagination.limit });
+  findByAddressAndChainId(pagination: ContractAddressTokensPaginateDto): Promise<Pagination<TokenModel>> {
+    return paginate<TokenEntity>(
+      this.repository,
+      { page: pagination.page, limit: pagination.limit },
+      {
+        where: { address: ILike(pagination.contractAddress), chainId: pagination.chainId },
+        order: { tokenId: 'ASC' },
+      },
+    );
   }
 
   findOneByAddressAndChainId(

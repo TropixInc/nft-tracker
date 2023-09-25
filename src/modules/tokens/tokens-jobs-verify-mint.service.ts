@@ -151,34 +151,25 @@ export class TokensJobsVerifyMintService {
         this.logger.verbose(
           `Save token ${params.address}/${params.chainId}/${params.tokenId} with uri ${params.tokenUri}`,
         );
-        const token = await queryRunner.manager.findOne(TokenEntity, {
-          where: {
+        await queryRunner.manager.upsert(
+          TokenEntity,
+          {
             address: params.address,
             chainId: params.chainId,
             tokenId: params.tokenId,
+            tokenUri: params.tokenUri,
           },
+          ['address', 'chainId', 'tokenId'],
+        );
+        await queryRunner.manager.save(TokenJobEntity, {
+          address: params.address,
+          chainId: params.chainId,
+          type: TokenJobType.FetchMetadata,
+          status: TokenJobStatus.Created,
+          executeAt: new Date(),
+          tokensIds: [params.tokenId],
+          tokensUris: [params.tokenUri],
         });
-        if (token) {
-          await queryRunner.manager.update(TokenEntity, token.id, {
-            tokenUri: params.tokenUri,
-          });
-        } else {
-          await queryRunner.manager.save(TokenEntity, {
-            address: params.address,
-            chainId: params.chainId,
-            tokenId: params.tokenId,
-            tokenUri: params.tokenUri,
-          });
-          await queryRunner.manager.save(TokenJobEntity, {
-            address: params.address,
-            chainId: params.chainId,
-            type: TokenJobType.FetchMetadata,
-            status: TokenJobStatus.Created,
-            executeAt: new Date(),
-            tokensIds: [params.tokenId],
-            tokensUris: [params.tokenUri],
-          });
-        }
       },
       opts?.queryRunnerArg,
     );
