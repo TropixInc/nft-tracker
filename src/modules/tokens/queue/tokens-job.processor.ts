@@ -50,7 +50,7 @@ export class TokenJobProcessor
         `schedule:${TokenJobJobs.ExecuteVerifyMint}`,
         {
           repeat: {
-            cron: CronExpression.EVERY_MINUTE,
+            cron: CronExpression.EVERY_5_SECONDS,
           },
           removeOnComplete: true,
           removeOnFail: true,
@@ -86,7 +86,7 @@ export class TokenJobProcessor
     ]);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeVerifyMintHandler() {
     await this.verifyMintService.execute();
