@@ -94,7 +94,7 @@ export class TokensJobsFetchMetadataService {
         .getCount();
 
       if (alreadyAlreadyExists) {
-        this.logger.debug(`Job already exists for ${item.tokenUri}`);
+        this.logger.warn(`Job already exists for ${item.tokenUri}`);
         continue;
       }
 
@@ -206,6 +206,14 @@ export class TokensJobsFetchMetadataService {
       result.imageRawUrl = payload['animationUrl'] as string;
     }
 
+    if (result.imageRawUrl) {
+      result.imageRawUrl = this.sanitizeUri(result.imageRawUrl);
+    }
+
     return result;
+  }
+
+  sanitizeUri(uri: string): string {
+    return uri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
   }
 }

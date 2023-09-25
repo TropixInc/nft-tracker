@@ -86,13 +86,13 @@ export class TokenJobProcessor
     ]);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeVerifyMintHandler() {
     await this.verifyMintService.execute();
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchMetadata, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchMetadata, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeFetchMetadataHandler() {
     await this.fetchMetadataService.execute();
