@@ -9,41 +9,6 @@
     secretKeyRef:
       name: pixwayid-backend-env
       key: APP_NAME
-- name: AUTH_JWT_EXPIRE
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AUTH_JWT_EXPIRE
-- name: AUTH_REFRESH_EXPIRE
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AUTH_REFRESH_EXPIRE
-- name: AUTH_SALT_ROUNDS
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AUTH_SALT_ROUNDS
-- name: AUTH_VERIFICATION_EXPIRE
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AUTH_VERIFICATION_EXPIRE
-- name: AWS_SECRET_MANAGER
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AWS_SECRET_MANAGER
-- name: AWS_SECRET_MANAGER_MOCKED_PAYLOAD
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: AWS_SECRET_MANAGER_MOCKED_PAYLOAD
-- name: BASE_FRONTEND_URL
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: BASE_FRONTEND_URL
 - name: BASE_URL
   valueFrom:
     secretKeyRef:
@@ -59,6 +24,11 @@
     secretKeyRef:
       name: pixwayid-backend-env
       key: CACHE_MANAGER_URL
+- name: CHAIN_IDS
+  valueFrom:
+    secretKeyRef:
+      name: pixwayid-backend-env
+      key: CHAIN_IDS
 - name: CLOUDINARY
   valueFrom:
     secretKeyRef:
@@ -94,26 +64,11 @@
     secretKeyRef:
       name: pixwayid-backend-env
       key: DB_USER
-- name: EMAIL
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: EMAIL
-- name: EMAIL_TEMPLATES
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: EMAIL_TEMPLATES
 - name: HOST
   valueFrom:
     secretKeyRef:
       name: pixwayid-backend-env
       key: HOST
-- name: KEY_BASE_URL
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: KEY_BASE_URL
 - name: LOG_LEVEL
   valueFrom:
     secretKeyRef:
@@ -124,11 +79,6 @@
     secretKeyRef:
       name: pixwayid-backend-env
       key: NODE_ENV
-- name: PIXCHAIN
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: PIXCHAIN
 - name: PORT
   valueFrom:
     secretKeyRef:
@@ -139,8 +89,3 @@
     secretKeyRef:
       name: pixwayid-backend-env
       key: QUEUE_URL
-- name: SENDINBLUE_API_KEY
-  valueFrom:
-    secretKeyRef:
-      name: pixwayid-backend-env
-      key: SENDINBLUE_API_KEY

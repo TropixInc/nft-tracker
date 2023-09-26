@@ -25,3 +25,32 @@ export interface TokenJob {
   status: TokenJobStatus;
   type: TokenJobType;
 }
+
+export interface Nft {
+  contract: {
+    address: string;
+  };
+  contractMetadata: {
+    name?: Optional<string>;
+    symbol?: Optional<string>;
+    totalSupply?: Optional<string>;
+    tokenType?: Optional<string>;
+  };
+  id: {
+    tokenId: string;
+    tokenMetadata: {
+      tokenType: string;
+    };
+  };
+  title?: Optional<string>;
+  description?: Optional<string>;
+  tokenUri: {
+    raw: string;
+    gateway: string;
+  };
+  media: {
+    raw?: Optional<string>;
+    gateway?: Optional<string>;
+  }[];
+  metadata?: Optional<Record<string, unknown>>;
+}

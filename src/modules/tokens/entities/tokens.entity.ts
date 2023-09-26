@@ -1,9 +1,10 @@
-import { Column, Entity, Index } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { Token } from '../interfaces';
 import { BaseEntity } from 'database/base.entity';
 import { ChainId } from 'src/common/enums';
 import { lowercase } from 'src/modules/database/database.helpers';
 import { Optional } from 'src/common/interfaces';
+import { ContractEntity } from 'src/modules/contracts/entities/contracts.entity';
 
 @Entity({ name: 'tokens' })
 @Index('UNIQUE_TOKEN_ADDRESS_TOKEN_ID_CHAIN', ['address', 'tokenId', 'chainId'], { unique: true })
@@ -37,6 +38,25 @@ export class TokenEntity extends BaseEntity implements Token {
 
   @Column({ nullable: true, type: 'jsonb', default: {} })
   metadata: Record<string, unknown> | null;
+
+  @Index()
+  @Column({ nullable: true, type: 'text', transformer: [lowercase] })
+  ownerAddress?: Optional<string>;
+
+  @ManyToOne(() => ContractEntity)
+  @JoinColumn([
+    { name: 'address', referencedColumnName: 'address' },
+    { name: 'chain_id', referencedColumnName: 'chainId' },
+  ])
+  contract?: Optional<ContractEntity>;
+
+  @Index()
+  @Column({ nullable: true, type: 'timestamptz' })
+  lastOwnerAddressCheckAt?: Optional<Date>;
+
+  @Index()
+  @Column({ nullable: true, type: 'timestamptz' })
+  lastOwnerAddressChangeAt?: Optional<Date>;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;

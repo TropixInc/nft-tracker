@@ -34,6 +34,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.name();
     } catch (error) {
+      this.logger.error(error);
       return '';
     }
   }
@@ -41,6 +42,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.symbol();
     } catch (error) {
+      this.logger.error(error);
       return '';
     }
   }
@@ -54,11 +56,20 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     }
   }
 
+  async getOwnerOf(tokenId: BigNumberish): Promise<Optional<string>> {
+    try {
+      return await this.contract.ownerOf(tokenId);
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
   async getTokenUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
       return null;
     }
   }
@@ -67,6 +78,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.contractURI();
     } catch (error) {
+      this.logger.error(error);
       return null;
     }
   }

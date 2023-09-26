@@ -1,17 +1,30 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ChainId } from 'src/common/enums';
+import { Optional } from 'src/common/interfaces';
 import { ValidateChainId } from 'src/common/validators/chain-id.validator';
 
-export class ContractAddressTokensPaginateDto {
-  @ApiProperty({
+export class OwnerAddressTokensRequestDto {
+  @ApiPropertyOptional({
     description: 'Contract address',
+    example: [],
+    type: String,
+    isArray: true,
+  })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : value?.split(',')))
+  contractAddresses?: Optional<string[]>;
+
+  @ApiProperty({
+    description: 'Owner address',
     example: '0x0',
     type: String,
   })
   @IsString()
-  contractAddress: string;
+  owner: string;
 
   @ValidateChainId()
   chainId: ChainId;

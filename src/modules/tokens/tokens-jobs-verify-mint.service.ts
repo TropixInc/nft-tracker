@@ -124,12 +124,14 @@ export class TokensJobsVerifyMintService {
             this.logger.error(`TokenUri is not valid for token ${tokenId}`);
             return Promise.resolve();
           }
+          const ownerAddress = await contract.getOwnerOf(tokenId);
           await this.upsertToken(
             {
               address: params.address,
               chainId: params.chainId,
               tokenId,
               tokenUri,
+              ownerAddress,
             },
             { queryRunnerArg: queryRunner },
           );
@@ -142,7 +144,7 @@ export class TokensJobsVerifyMintService {
   }
 
   private upsertToken(
-    params: { address: string; chainId: ChainId; tokenId: string; tokenUri: string },
+    params: { address: string; chainId: ChainId; tokenId: string; tokenUri: string; ownerAddress?: Optional<string> },
     opts?: DatabaseFunctionOptions,
   ) {
     return runTransaction<void>(
@@ -158,6 +160,9 @@ export class TokensJobsVerifyMintService {
             chainId: params.chainId,
             tokenId: params.tokenId,
             tokenUri: params.tokenUri,
+            ownerAddress: params.ownerAddress?.toLocaleLowerCase(),
+            lastOwnerAddressChangeAt: new Date(),
+            lastOwnerAddressCheckAt: new Date(),
           },
           ['address', 'chainId', 'tokenId'],
         );

@@ -1,13 +1,8 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ContractAddressTokensRequestDto } from './dtos/contract-address-tokens-request.dto';
+import { OwnerAddressTokensRequestDto } from './dtos/owner-address-tokens-request.dto';
 import { TokensService } from './tokens.service';
-import { ChainId } from 'src/common/enums';
-import { AddressZero } from '@ethersproject/constants';
-import { ContractAlreadyExistsException } from './exceptions';
-import { TokenModel } from './entities/tokens.entity';
-import { Pagination } from 'nestjs-typeorm-paginate';
-import { ContractAddressTokensPaginateDto } from './dtos/contract-address-tokens-paginate.dto';
 
 @ApiTags('Nfts')
 @Controller('nfts')
@@ -17,11 +12,16 @@ export class TokensController {
   @ApiOperation({
     description: 'Find all tokens by contract address and chainId',
   })
-  @ApiException(() => [new ContractAlreadyExistsException(AddressZero, ChainId.POLYGON)])
   @Get('by-contract')
-  async findByAddressAndChainId(
-    @Query() pagination: ContractAddressTokensPaginateDto,
-  ): Promise<Pagination<TokenModel>> {
+  async findByAddressAndChainId(@Query() pagination: ContractAddressTokensRequestDto) {
     return this.service.findByAddressAndChainId(pagination);
+  }
+
+  @ApiOperation({
+    description: 'Find one token by owner address and chainId',
+  })
+  @Get('by-owner')
+  async findByOwnerAddressAndChainId(@Query() pagination: OwnerAddressTokensRequestDto) {
+    return this.service.findByOwnerAddressAndChainId(pagination);
   }
 }
