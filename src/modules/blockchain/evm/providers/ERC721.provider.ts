@@ -60,7 +60,6 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.ownerOf(tokenId);
     } catch (error) {
-      this.logger.error(error);
       return null;
     }
   }
@@ -69,7 +68,14 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
-      this.logger.error(error);
+      return await this.getUri(tokenId);
+    }
+  }
+
+  async getUri(tokenId: BigNumberish): Promise<Optional<string>> {
+    try {
+      return await this.contract.uri(tokenId);
+    } catch (error) {
       return null;
     }
   }
@@ -78,7 +84,6 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.contractURI();
     } catch (error) {
-      this.logger.error(error);
       return null;
     }
   }
@@ -96,7 +101,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
       return '';
     }
     if (!baseUri) {
-      return this.sanitizeTokenUri(tokenUri!);
+      return this.sanitizeTokenUri(tokenUri!, tokenId);
     }
     let uri = baseUri;
 
@@ -106,14 +111,12 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
       uri = `${baseUri}/${tokenUri}`;
     }
 
-    if (uri.includes('{id}')) {
-      uri = uri.replace('{id}', tokenId);
-    }
-
-    return this.sanitizeTokenUri(uri);
+    return this.sanitizeTokenUri(uri, tokenId);
   }
 
-  sanitizeTokenUri(tokenUri: string): string {
-    return tokenUri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
+  sanitizeTokenUri(tokenUri: string, tokenId: string): string {
+    return tokenUri
+      .replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/')
+      .replace('{id}', BigInt(tokenId).toString(16).padStart(64, '0'));
   }
 }

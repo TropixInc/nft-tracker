@@ -11,5 +11,6 @@ export class ERC721 extends ethers.Contract {
   supportsInterface(interfaceId: BytesLike): Promise<boolean>;
   symbol(): Promise<string>;
   tokenURI(tokenId: BigNumberish): Promise<string>;
+  uri(tokenId: BigNumberish): Promise<string>;
   totalSupply(): Promise<BigNumberish>;
 }

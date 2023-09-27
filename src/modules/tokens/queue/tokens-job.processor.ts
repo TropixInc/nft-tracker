@@ -8,11 +8,19 @@ import { ApplicationWorker } from 'common/interfaces';
 import { LocalQueueEnum, TokenJobJobs } from 'modules/queue/enums';
 import { TokensJobsFetchMetadataService } from '../tokens-jobs-fetch-metadata.service';
 import { TokensJobsVerifyMintService } from '../tokens-jobs-verify-mint.service';
+import { TokensJobsFetchOwnerAddressService } from '../tokens-jobs-fetch-owner-address.service';
 
 @Processor(LocalQueueEnum.TokenJob)
 export class TokenJobProcessor
   implements
-    ApplicationWorker<'executeVerifyMint' | 'checkJobFrozen' | 'executeFetchMetadata' | 'createFetchMetadataJobs'>
+    ApplicationWorker<
+      | 'executeVerifyMint'
+      | 'checkJobFrozen'
+      | 'executeFetchMetadata'
+      | 'executeFetchOwnerAddress'
+      | 'createFetchMetadataJobs'
+      | 'createFetchOwnerAddressJobs'
+    >
 {
   private logger = new Logger(TokenJobProcessor.name);
 
@@ -21,6 +29,7 @@ export class TokenJobProcessor
     private readonly queue: Queue,
     private readonly verifyMintService: TokensJobsVerifyMintService,
     private readonly fetchMetadataService: TokensJobsFetchMetadataService,
+    private readonly fetchOwnerAddressService: TokensJobsFetchOwnerAddressService,
   ) {}
 
   @LoggerContext()
@@ -30,60 +39,49 @@ export class TokenJobProcessor
 
   @LoggerContext()
   async scheduleJobs() {
-    await Promise.all([
-      scheduleRepeatableJob(
-        this.queue,
-        TokenJobJobs.CreateFetchMetadataJobs,
-        `schedule:${TokenJobJobs.CreateFetchMetadataJobs}`,
-        {
-          repeat: {
-            cron: CronExpression.EVERY_10_SECONDS,
+    const jobs = [
+      {
+        name: TokenJobJobs.CreateFetchMetadataJobs,
+        cron: CronExpression.EVERY_10_SECONDS,
+      },
+      {
+        name: TokenJobJobs.CreateFetchOwnerAddressJobs,
+        cron: CronExpression.EVERY_MINUTE,
+      },
+      {
+        name: TokenJobJobs.ExecuteVerifyMint,
+        cron: CronExpression.EVERY_5_SECONDS,
+      },
+      {
+        name: TokenJobJobs.ExecuteFetchMetadata,
+        cron: CronExpression.EVERY_SECOND,
+      },
+      {
+        name: TokenJobJobs.ExecuteFetchOwnerAddress,
+        cron: CronExpression.EVERY_SECOND,
+      },
+      {
+        name: TokenJobJobs.CheckJobFrozen,
+        cron: CronExpression.EVERY_MINUTE,
+      },
+    ];
+    await Promise.all(
+      jobs.map(async (job) => {
+        return scheduleRepeatableJob(
+          this.queue,
+          job.name,
+          `schedule:${job.name}`,
+          {
+            repeat: {
+              cron: job.cron,
+            },
+            removeOnComplete: true,
+            removeOnFail: true,
           },
-          removeOnComplete: true,
-          removeOnFail: true,
-        },
-        this.logger,
-      ),
-      scheduleRepeatableJob(
-        this.queue,
-        TokenJobJobs.ExecuteVerifyMint,
-        `schedule:${TokenJobJobs.ExecuteVerifyMint}`,
-        {
-          repeat: {
-            cron: CronExpression.EVERY_5_SECONDS,
-          },
-          removeOnComplete: true,
-          removeOnFail: true,
-        },
-        this.logger,
-      ),
-      scheduleRepeatableJob(
-        this.queue,
-        TokenJobJobs.ExecuteFetchMetadata,
-        `schedule:${TokenJobJobs.ExecuteFetchMetadata}`,
-        {
-          repeat: {
-            cron: CronExpression.EVERY_SECOND,
-          },
-          removeOnComplete: true,
-          removeOnFail: true,
-        },
-        this.logger,
-      ),
-      scheduleRepeatableJob(
-        this.queue,
-        TokenJobJobs.CheckJobFrozen,
-        `schedule:${TokenJobJobs.CheckJobFrozen}`,
-        {
-          repeat: {
-            cron: CronExpression.EVERY_MINUTE,
-          },
-          removeOnComplete: true,
-          removeOnFail: true,
-        },
-        this.logger,
-      ),
-    ]);
+          this.logger,
+        );
+      }),
+    );
   }
 
   @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 1 })
@@ -98,12 +96,19 @@ export class TokenJobProcessor
     await this.fetchMetadataService.execute();
   }
 
+  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddress, concurrency: 5 })
+  @LoggerContext({ logError: true })
+  async executeFetchOwnerAddressHandler() {
+    await this.fetchOwnerAddressService.execute();
+  }
+
   @Process({ name: TokenJobJobs.CheckJobFrozen })
   @LoggerContext({ logError: true })
   async checkJobFrozenHandler() {
     await Promise.all([
       this.verifyMintService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchMetadataService.checkJobsHaveAlreadyStartedButNotFinished(),
+      this.fetchOwnerAddressService.checkJobsHaveAlreadyStartedButNotFinished(),
     ]);
   }
 
@@ -111,5 +116,11 @@ export class TokenJobProcessor
   @LoggerContext({ logError: true })
   async createFetchMetadataJobsHandler() {
     await this.fetchMetadataService.checkTokensWithoutMetadataForLongTime();
+  }
+
+  @Process({ name: TokenJobJobs.CreateFetchOwnerAddressJobs })
+  @LoggerContext({ logError: true })
+  async createFetchOwnerAddressJobsHandler() {
+    await this.fetchOwnerAddressService.checkTokensOwnerAddressNotChangeForLongTime();
   }
 }
