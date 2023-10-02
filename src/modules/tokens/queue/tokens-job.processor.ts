@@ -18,7 +18,7 @@ export class TokenJobProcessor
       | 'checkJobFrozen'
       | 'executeFetchMetadata'
       | 'executeFetchOwnerAddress'
-      | 'createFetchMetadataJobs'
+      | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
     >
 {
@@ -41,7 +41,7 @@ export class TokenJobProcessor
   async scheduleJobs() {
     const jobs = [
       {
-        name: TokenJobJobs.CreateFetchMetadataJobs,
+        name: TokenJobJobs.CreateFetchJobs,
         cron: CronExpression.EVERY_10_SECONDS,
       },
       {
@@ -51,10 +51,6 @@ export class TokenJobProcessor
       {
         name: TokenJobJobs.ExecuteVerifyMint,
         cron: CronExpression.EVERY_5_SECONDS,
-      },
-      {
-        name: TokenJobJobs.ExecuteFetchOwnerAddress,
-        cron: CronExpression.EVERY_SECOND,
       },
       {
         name: TokenJobJobs.CheckJobFrozen,
@@ -89,14 +85,13 @@ export class TokenJobProcessor
   @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 5 })
   @LoggerContext({ logError: true })
   async executeFetchMetadataHandler(job: Job<{ jobId: string }>) {
-    this.logger.debug(`Executing queue ${job.data.jobId}`);
     await this.fetchMetadataService.execute(job.data.jobId);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddress, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddressByJob, concurrency: 5 })
   @LoggerContext({ logError: true })
-  async executeFetchOwnerAddressHandler() {
-    await this.fetchOwnerAddressService.execute();
+  async executeFetchOwnerAddressHandler(job: Job<{ jobId: string }>) {
+    await this.fetchOwnerAddressService.execute(job.data.jobId);
   }
 
   @Process({ name: TokenJobJobs.CheckJobFrozen })
@@ -109,12 +104,13 @@ export class TokenJobProcessor
     ]);
   }
 
-  @Process({ name: TokenJobJobs.CreateFetchMetadataJobs })
+  @Process({ name: TokenJobJobs.CreateFetchJobs })
   @LoggerContext({ logError: true })
-  async createFetchMetadataJobsHandler() {
+  async createFetchJobsHandler() {
     await Promise.all([
       this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
       this.fetchMetadataService.scheduleNextJobs(),
+      this.fetchOwnerAddressService.scheduleNextJobs(),
     ]);
   }
 
