@@ -10,6 +10,7 @@ import { TokenJobProcessor } from './queue/tokens-job.processor';
 import { TokensJobsVerifyMintService } from './tokens-jobs-verify-mint.service';
 import { TokensJobsService } from './tokens-jobs.service';
 import { TokensJobsFetchMetadataService } from './tokens-jobs-fetch-metadata.service';
+import { TokensJobsFetchOwnerAddressService } from './tokens-jobs-fetch-owner-address.service';
 
 @Module({
   imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity]), BlockchainModule],
@@ -19,6 +20,7 @@ import { TokensJobsFetchMetadataService } from './tokens-jobs-fetch-metadata.ser
     TokensJobsService,
     TokensJobsVerifyMintService,
     TokensJobsFetchMetadataService,
+    TokensJobsFetchOwnerAddressService,
     TokenJobProcessor,
   ],
   exports: [TokensService, TokensJobsService],

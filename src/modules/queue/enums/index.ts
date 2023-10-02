@@ -17,4 +17,6 @@ export enum TokenJobJobs {
   CheckJobFrozen = 'checkJobFrozen',
   ExecuteFetchMetadata = 'executeFetchMetadata',
   CreateFetchMetadataJobs = 'createFetchMetadataJobs',
+  CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',
+  ExecuteFetchOwnerAddress = 'executeFetchOwnerAddress',
 }

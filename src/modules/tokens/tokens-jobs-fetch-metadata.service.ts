@@ -6,7 +6,7 @@ import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
-import { LessThan, Repository } from 'typeorm';
+import { LessThan, QueryRunner, Repository } from 'typeorm';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
@@ -25,19 +25,17 @@ export class TokensJobsFetchMetadataService {
   ) {}
 
   async execute(): Promise<void> {
-    const job = await this.getNextJob();
-    this.logger.debug(`Starting job ${job?.id}`);
-    if (!job || !job.tokensUris?.length) {
-      return Promise.resolve();
-    }
-    try {
-      this.logger.debug(`Starting job ${job.tokensUris[0]}`);
-      await this.tokenJobRepository.update(job.id, {
-        status: TokenJobStatus.Started,
-        startedAt: new Date(),
-      });
-      const payload = await this.fetchMetadata(job.tokensUris[0]);
-      await runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
+    await runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
+      const job = await this.getNextJob(queryRunner);
+      if (!job || !job.tokensUris?.length) {
+        return Promise.resolve();
+      }
+      try {
+        await this.tokenJobRepository.update(job.id, {
+          status: TokenJobStatus.Started,
+          startedAt: new Date(),
+        });
+        const payload = await this.fetchMetadata(job.tokensUris[0]);
         await queryRunner.manager.update(TokenJobEntity, job.id, {
           status: TokenJobStatus.Completed,
           completeAt: new Date(),
@@ -51,15 +49,16 @@ export class TokensJobsFetchMetadataService {
           },
           { queryRunnerArg: queryRunner },
         );
-      });
-    } catch (error) {
-      this.logger.error(error);
-      await this.tokenJobRepository.update(job.id, {
-        status: TokenJobStatus.Failed,
-        failedAt: new Date(),
-      });
-      throw error;
-    }
+        this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
+      } catch (error) {
+        this.logger.error(error);
+        await this.tokenJobRepository.update(job.id, {
+          status: TokenJobStatus.Failed,
+          failedAt: new Date(),
+        });
+        throw error;
+      }
+    });
   }
 
   async checkJobsHaveAlreadyStartedButNotFinished(): Promise<void> {
@@ -94,7 +93,7 @@ export class TokensJobsFetchMetadataService {
         .getCount();
 
       if (alreadyAlreadyExists) {
-        this.logger.warn(`Job already exists for ${item.tokenUri}`);
+        this.logger.verbose(`Job already exists for ${item.tokenUri}`);
         continue;
       }
 
@@ -109,14 +108,19 @@ export class TokensJobsFetchMetadataService {
     }
   }
 
-  private async getNextJob(): Promise<Optional<TokenJobEntity>> {
-    return this.tokenJobRepository.findOne({
+  private async getNextJob(queryRunner: QueryRunner): Promise<Optional<TokenJobEntity>> {
+    return queryRunner.manager.findOne(TokenJobEntity, {
       where: {
         status: TokenJobStatus.Created,
         type: TokenJobType.FetchMetadata,
+        executeAt: LessThan(new Date()),
       },
       order: {
         executeAt: 'ASC',
+      },
+      lock: {
+        mode: 'for_key_share',
+        onLocked: 'skip_locked',
       },
     });
   }

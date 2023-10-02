@@ -8,4 +8,5 @@ export enum TokenJobStatus {
 export enum TokenJobType {
   VerifyMint = 'verify_mint',
   FetchMetadata = 'fetch_metadata',
+  FetchOwnerAddress = 'fetch_owner_address',
 }

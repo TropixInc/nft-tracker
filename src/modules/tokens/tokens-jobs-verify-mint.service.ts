@@ -4,7 +4,7 @@ import { ChainId } from 'common/enums';
 import { parallel } from 'radash';
 import { runTransaction } from 'common/helpers/transaction.helper';
 import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
-import { LessThan, Repository } from 'typeorm';
+import { LessThan, QueryRunner, Repository } from 'typeorm';
 import { subMinutes } from 'date-fns';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
@@ -22,43 +22,47 @@ export class TokensJobsVerifyMintService {
   ) {}
 
   async execute(): Promise<void> {
-    const job = await this.getNextJob();
-    if (!job) {
-      return Promise.resolve();
-    }
-    await this.tokenJobRepository.update(job.id, {
-      status: TokenJobStatus.Started,
-      startedAt: new Date(),
-    });
     return runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
-      const countTokensFound = await this.verifyMintByTokensIds(
-        {
-          tokensIds: job.tokensIds,
+      const job = await this.getNextJob(queryRunner);
+      if (!job) {
+        return Promise.resolve();
+      }
+      this.logger.verbose(`Starting verify mint job ${job.tokensIds.join(',')}`);
+      await this.tokenJobRepository.update(job.id, {
+        status: TokenJobStatus.Started,
+        startedAt: new Date(),
+      });
+      try {
+        const countTokensFound = await this.verifyMintByTokensIds(
+          {
+            tokensIds: job.tokensIds,
+            address: job.address,
+            chainId: job.chainId,
+          },
+          { queryRunnerArg: queryRunner },
+        );
+        await queryRunner.manager.update(TokenJobEntity, job.id, {
+          status: TokenJobStatus.Completed,
+          completeAt: new Date(),
+        });
+        if (countTokensFound === 0) return Promise.resolve();
+        await queryRunner.manager.save(TokenJobEntity, {
           address: job.address,
           chainId: job.chainId,
-        },
-        { queryRunnerArg: queryRunner },
-      );
-      await queryRunner.manager.update(TokenJobEntity, job.id, {
-        status: TokenJobStatus.Completed,
-        completeAt: new Date(),
-      });
-      if (countTokensFound === 0) return Promise.resolve();
-      await queryRunner.manager.save(TokenJobEntity, {
-        address: job.address,
-        chainId: job.chainId,
-        type: TokenJobType.VerifyMint,
-        status: TokenJobStatus.Created,
-        executeAt: new Date(),
-        tokensIds: this.getNextSequentialFromTokensIds(job.tokensIds),
-      });
-    }).catch(async (error) => {
-      this.logger.error(error);
-      await this.tokenJobRepository.update(job.id, {
-        status: TokenJobStatus.Failed,
-        failedAt: new Date(),
-      });
-      throw error;
+          type: TokenJobType.VerifyMint,
+          status: TokenJobStatus.Created,
+          executeAt: new Date(),
+          tokensIds: this.getNextSequentialFromTokensIds(job.tokensIds),
+        });
+        this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
+      } catch (error) {
+        this.logger.error(error);
+        await this.tokenJobRepository.update(job.id, {
+          status: TokenJobStatus.Failed,
+          failedAt: new Date(),
+        });
+        throw error;
+      }
     });
   }
 
@@ -77,19 +81,24 @@ export class TokensJobsVerifyMintService {
     );
   }
 
-  private getNextSequentialFromTokensIds(tokensIds: string[], numberOfItems = 10): string[] {
+  private getNextSequentialFromTokensIds(tokensIds: string[], numberOfItems = 30): string[] {
     const highestValue = Math.max(...tokensIds.map(Number));
     return Array.from({ length: numberOfItems }, (_, index) => highestValue + index + 1).map(String);
   }
 
-  private async getNextJob(): Promise<Optional<TokenJobEntity>> {
-    return this.tokenJobRepository.findOne({
+  private async getNextJob(queryRunner: QueryRunner): Promise<Optional<TokenJobEntity>> {
+    return queryRunner.manager.findOne(TokenJobEntity, {
       where: {
         status: TokenJobStatus.Created,
         type: TokenJobType.VerifyMint,
+        executeAt: LessThan(new Date()),
       },
       order: {
         executeAt: 'ASC',
+      },
+      lock: {
+        mode: 'for_key_share',
+        onLocked: 'skip_locked',
       },
     });
   }
@@ -108,19 +117,21 @@ export class TokensJobsVerifyMintService {
         let countTokensFound = 0;
         const contract = await this.eRC721Provider.create(params.address, params.chainId);
         const baseUri = await contract.getBaseUri();
-        await parallel(5, params.tokensIds, async (tokenId) => {
+        await parallel(10, params.tokensIds, async (tokenId) => {
           const uri = await contract.getTokenUri(tokenId);
           const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
           if (!tokenUri) {
             this.logger.error(`TokenUri is not valid for token ${tokenId}`);
             return Promise.resolve();
           }
+          const ownerAddress = await contract.getOwnerOf(tokenId);
           await this.upsertToken(
             {
               address: params.address,
               chainId: params.chainId,
               tokenId,
               tokenUri,
+              ownerAddress,
             },
             { queryRunnerArg: queryRunner },
           );
@@ -133,7 +144,7 @@ export class TokensJobsVerifyMintService {
   }
 
   private upsertToken(
-    params: { address: string; chainId: ChainId; tokenId: string; tokenUri: string },
+    params: { address: string; chainId: ChainId; tokenId: string; tokenUri: string; ownerAddress?: Optional<string> },
     opts?: DatabaseFunctionOptions,
   ) {
     return runTransaction<void>(
@@ -142,34 +153,28 @@ export class TokensJobsVerifyMintService {
         this.logger.verbose(
           `Save token ${params.address}/${params.chainId}/${params.tokenId} with uri ${params.tokenUri}`,
         );
-        const token = await queryRunner.manager.findOne(TokenEntity, {
-          where: {
+        await queryRunner.manager.upsert(
+          TokenEntity,
+          {
             address: params.address,
             chainId: params.chainId,
             tokenId: params.tokenId,
+            tokenUri: params.tokenUri,
+            ownerAddress: params.ownerAddress?.toLocaleLowerCase(),
+            lastOwnerAddressChangeAt: new Date(),
+            lastOwnerAddressCheckAt: new Date(),
           },
+          ['address', 'chainId', 'tokenId'],
+        );
+        await queryRunner.manager.save(TokenJobEntity, {
+          address: params.address,
+          chainId: params.chainId,
+          type: TokenJobType.FetchMetadata,
+          status: TokenJobStatus.Created,
+          executeAt: new Date(),
+          tokensIds: [params.tokenId],
+          tokensUris: [params.tokenUri],
         });
-        if (token) {
-          await queryRunner.manager.update(TokenEntity, token.id, {
-            tokenUri: params.tokenUri,
-          });
-        } else {
-          await queryRunner.manager.save(TokenEntity, {
-            address: params.address,
-            chainId: params.chainId,
-            tokenId: params.tokenId,
-            tokenUri: params.tokenUri,
-          });
-          await queryRunner.manager.save(TokenJobEntity, {
-            address: params.address,
-            chainId: params.chainId,
-            type: TokenJobType.FetchMetadata,
-            status: TokenJobStatus.Created,
-            executeAt: new Date(),
-            tokensIds: [params.tokenId],
-            tokensUris: [params.tokenUri],
-          });
-        }
       },
       opts?.queryRunnerArg,
     );

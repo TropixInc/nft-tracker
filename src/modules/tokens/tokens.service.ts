@@ -1,13 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { paginate, Pagination } from 'nestjs-typeorm-paginate';
-import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { isArray } from 'class-validator';
+import { paginate } from 'nestjs-typeorm-paginate';
 import { runTransaction } from 'src/common/helpers/transaction.helper';
 import { DatabaseFunctionOptions } from 'src/common/interfaces';
-import { ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
+import { ContractAddressTokensRequestDto } from './dtos/contract-address-tokens-request.dto';
+import { OwnerAddressTokensRequestDto } from './dtos/owner-address-tokens-request.dto';
 import { TokenEntity, TokenModel } from './entities/tokens.entity';
 import { ContractNotFoundException } from './exceptions';
+import { NftsMapper } from './mappers/nfts.mapper';
 
 @Injectable()
 export class TokensService {
@@ -19,8 +22,45 @@ export class TokensService {
     private eRC721Provider: ERC721Provider,
   ) {}
 
-  findByAddressAndChainId(pagination: PaginationDto): Promise<Pagination<TokenModel>> {
-    return paginate<TokenEntity>(this.repository, { page: pagination.page, limit: pagination.limit });
+  findByAddressAndChainId(pagination: ContractAddressTokensRequestDto) {
+    return paginate(
+      this.repository,
+      { page: pagination.page, limit: pagination.limit },
+      {
+        where: { address: ILike(pagination.contractAddress), chainId: pagination.chainId },
+        order: { tokenId: 'ASC' },
+        relations: {
+          contract: true,
+        },
+      },
+    ).then((result) => ({
+      ...result,
+      items: NftsMapper.toMap(result.items),
+    }));
+  }
+
+  findByOwnerAddressAndChainId(pagination: OwnerAddressTokensRequestDto) {
+    const where: FindOptionsWhere<TokenEntity> = {
+      chainId: pagination.chainId,
+      ownerAddress: pagination.owner,
+    };
+    if (isArray(pagination.contractAddresses) && pagination.contractAddresses?.length > 0) {
+      where.address = In(pagination.contractAddresses);
+    }
+    return paginate(
+      this.repository,
+      { page: pagination.page, limit: pagination.limit },
+      {
+        where,
+        order: { tokenId: 'ASC' },
+        relations: {
+          contract: true,
+        },
+      },
+    ).then((result) => ({
+      ...result,
+      items: NftsMapper.toMap(result.items),
+    }));
   }
 
   findOneByAddressAndChainId(
