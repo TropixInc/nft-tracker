@@ -1,12 +1,15 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Queue } from 'bull';
 import { ChainId } from 'common/enums';
-import { runTransaction } from 'common/helpers/transaction.helper';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
+import { parallel } from 'radash';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
-import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
-import { LessThan, QueryRunner, Repository } from 'typeorm';
+import { Optional } from 'src/common/interfaces';
+import { LessThan, Repository } from 'typeorm';
+import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
@@ -22,43 +25,48 @@ export class TokensJobsFetchMetadataService {
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
     private readonly tokensJobsService: TokensJobsService,
+    @InjectQueue(LocalQueueEnum.TokenJob)
+    private readonly queue: Queue,
   ) {}
 
-  async execute(): Promise<void> {
-    await runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
-      const job = await this.getNextJob(queryRunner);
-      if (!job || !job.tokensUris?.length) {
-        return Promise.resolve();
-      }
-      try {
-        await this.tokenJobRepository.update(job.id, {
-          status: TokenJobStatus.Started,
-          startedAt: new Date(),
-        });
-        const payload = await this.fetchMetadata(job.tokensUris[0]);
-        await queryRunner.manager.update(TokenJobEntity, job.id, {
-          status: TokenJobStatus.Completed,
-          completeAt: new Date(),
-        });
-        await this.updateMetadataToken(
-          {
-            address: job.address,
-            chainId: job.chainId,
-            tokenId: job.tokensIds[0],
-            payload,
-          },
-          { queryRunnerArg: queryRunner },
-        );
-        this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
-      } catch (error) {
-        this.logger.error(error);
-        await this.tokenJobRepository.update(job.id, {
-          status: TokenJobStatus.Failed,
-          failedAt: new Date(),
-        });
-        throw error;
-      }
+  async execute(jobId: string): Promise<void> {
+    const job = await this.tokenJobRepository.findOne({
+      where: {
+        id: jobId,
+        type: TokenJobType.FetchMetadata,
+        status: TokenJobStatus.Created,
+        executeAt: LessThan(new Date()),
+      },
     });
+    if (!job || !job.tokensUris?.length) {
+      return Promise.resolve();
+    }
+    this.logger.debug(`Executing job fetch metadata ${job.id}`);
+    try {
+      await this.tokenJobRepository.update(job.id, {
+        status: TokenJobStatus.Started,
+        startedAt: new Date(),
+      });
+      const payload = await this.fetchMetadata(job.tokensUris[0]);
+      await this.tokenJobRepository.manager.update(TokenJobEntity, job.id, {
+        status: TokenJobStatus.Completed,
+        completeAt: new Date(),
+      });
+      await this.updateMetadataToken({
+        address: job.address,
+        chainId: job.chainId,
+        tokenId: job.tokensIds[0],
+        payload,
+      });
+      this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
+    } catch (error) {
+      this.logger.error(error);
+      await this.tokenJobRepository.update(job.id, {
+        status: TokenJobStatus.Failed,
+        failedAt: new Date(),
+      });
+      throw error;
+    }
   }
 
   async checkJobsHaveAlreadyStartedButNotFinished(): Promise<void> {
@@ -108,8 +116,8 @@ export class TokensJobsFetchMetadataService {
     }
   }
 
-  private async getNextJob(queryRunner: QueryRunner): Promise<Optional<TokenJobEntity>> {
-    return queryRunner.manager.findOne(TokenJobEntity, {
+  async scheduleNextJobs(): Promise<void> {
+    const jobs = await this.tokenJobRepository.find({
       where: {
         status: TokenJobStatus.Created,
         type: TokenJobType.FetchMetadata,
@@ -118,10 +126,26 @@ export class TokensJobsFetchMetadataService {
       order: {
         executeAt: 'ASC',
       },
-      lock: {
-        mode: 'for_key_share',
-        onLocked: 'skip_locked',
+      take: 30,
+      select: {
+        id: true,
       },
+    });
+    await parallel(10, jobs, async (job) => {
+      await this.queue.add(
+        {
+          jobId: job.id,
+        },
+        {
+          jobId: `${TokenJobJobs.ExecuteFetchMetadataByJob}:${job.id}`,
+          attempts: 3,
+          removeOnComplete: {
+            age: 2 * 60,
+            count: 1000,
+          },
+          removeOnFail: true,
+        },
+      );
     });
   }
 
@@ -136,31 +160,26 @@ export class TokensJobsFetchMetadataService {
       });
   }
 
-  private updateMetadataToken(
-    params: { address: string; chainId: ChainId; tokenId: string; payload: Record<string, unknown> },
-    opts?: DatabaseFunctionOptions,
-  ) {
-    return runTransaction<void>(
-      this.tokenJobRepository.manager,
-      async (queryRunner) => {
-        const sanitizePayload = this.sanitizePayload(params.payload);
-        await queryRunner.manager.update(
-          TokenEntity,
-          {
-            address: params.address,
-            chainId: params.chainId,
-            tokenId: params.tokenId,
-          },
-          {
-            name: sanitizePayload?.name,
-            description: sanitizePayload?.description,
-            externalUrl: sanitizePayload?.externalUrl,
-            imageRawUrl: sanitizePayload?.imageRawUrl,
-            metadata: sanitizePayload?.metadata as any,
-          },
-        );
+  private async updateMetadataToken(params: {
+    address: string;
+    chainId: ChainId;
+    tokenId: string;
+    payload: Record<string, unknown>;
+  }) {
+    const sanitizePayload = this.sanitizePayload(params.payload);
+    await this.tokenRepository.update(
+      {
+        address: params.address,
+        chainId: params.chainId,
+        tokenId: params.tokenId,
       },
-      opts?.queryRunnerArg,
+      {
+        name: sanitizePayload?.name,
+        description: sanitizePayload?.description,
+        externalUrl: sanitizePayload?.externalUrl,
+        imageRawUrl: sanitizePayload?.imageRawUrl,
+        metadata: sanitizePayload?.metadata as any,
+      },
     );
   }
 
@@ -209,6 +228,15 @@ export class TokensJobsFetchMetadataService {
     } else if (isString(payload['animationUrl'])) {
       result.imageRawUrl = payload['animationUrl'] as string;
     }
+
+    if (result.imageRawUrl) {
+      result.imageRawUrl = this.sanitizeUri(result.imageRawUrl);
+    }
+
     return result;
+  }
+
+  sanitizeUri(uri: string): string {
+    return uri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
   }
 }

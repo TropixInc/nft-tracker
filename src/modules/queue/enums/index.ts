@@ -15,7 +15,7 @@ export enum WebhookJobs {
 export enum TokenJobJobs {
   ExecuteVerifyMint = 'executeVerifyMint',
   CheckJobFrozen = 'checkJobFrozen',
-  ExecuteFetchMetadata = 'executeFetchMetadata',
+  ExecuteFetchMetadataByJob = 'executeFetchMetadataByJob',
   CreateFetchMetadataJobs = 'createFetchMetadataJobs',
   CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',
   ExecuteFetchOwnerAddress = 'executeFetchOwnerAddress',

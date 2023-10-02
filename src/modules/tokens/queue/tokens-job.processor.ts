@@ -1,7 +1,7 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
-import { Queue } from 'bull';
+import { Job, Queue } from 'bull';
 import { LoggerContext } from 'common/decorators/logger-context.decorator';
 import { scheduleRepeatableJob } from 'common/helpers/queue.helper';
 import { ApplicationWorker } from 'common/interfaces';
@@ -53,10 +53,6 @@ export class TokenJobProcessor
         cron: CronExpression.EVERY_5_SECONDS,
       },
       {
-        name: TokenJobJobs.ExecuteFetchMetadata,
-        cron: CronExpression.EVERY_SECOND,
-      },
-      {
         name: TokenJobJobs.ExecuteFetchOwnerAddress,
         cron: CronExpression.EVERY_SECOND,
       },
@@ -90,10 +86,11 @@ export class TokenJobProcessor
     await this.verifyMintService.execute();
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchMetadata, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 5 })
   @LoggerContext({ logError: true })
-  async executeFetchMetadataHandler() {
-    await this.fetchMetadataService.execute();
+  async executeFetchMetadataHandler(job: Job<{ jobId: string }>) {
+    this.logger.debug(`Executing queue ${job.data.jobId}`);
+    await this.fetchMetadataService.execute(job.data.jobId);
   }
 
   @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddress, concurrency: 5 })
@@ -115,7 +112,10 @@ export class TokenJobProcessor
   @Process({ name: TokenJobJobs.CreateFetchMetadataJobs })
   @LoggerContext({ logError: true })
   async createFetchMetadataJobsHandler() {
-    await this.fetchMetadataService.checkTokensWithoutMetadataForLongTime();
+    await Promise.all([
+      this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
+      this.fetchMetadataService.scheduleNextJobs(),
+    ]);
   }
 
   @Process({ name: TokenJobJobs.CreateFetchOwnerAddressJobs })
