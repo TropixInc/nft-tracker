@@ -36,8 +36,8 @@ export class TokensJobsVerifyMintService {
         const countTokensFound = await this.verifyMintByTokensIds(
           {
             tokensIds: job.tokensIds,
-            address: job.address,
-            chainId: job.chainId,
+            address: job.address!,
+            chainId: job.chainId!,
           },
           { queryRunnerArg: queryRunner },
         );

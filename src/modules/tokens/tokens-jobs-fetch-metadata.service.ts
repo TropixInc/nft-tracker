@@ -8,8 +8,9 @@ import { isObject, isString } from 'lodash';
 import { parallel } from 'radash';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { Optional } from 'src/common/interfaces';
-import { LessThan, Repository } from 'typeorm';
+import { ILike, LessThan, Repository } from 'typeorm';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
+import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
@@ -24,6 +25,8 @@ export class TokensJobsFetchMetadataService {
     private readonly tokenJobRepository: Repository<TokenJobEntity>,
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
+    @InjectRepository(TokenAssetEntity)
+    private readonly assetRepository: Repository<TokenAssetEntity>,
     private readonly tokensJobsService: TokensJobsService,
     @InjectQueue(LocalQueueEnum.TokenJob)
     private readonly queue: Queue,
@@ -53,8 +56,8 @@ export class TokensJobsFetchMetadataService {
         completeAt: new Date(),
       });
       await this.updateMetadataToken({
-        address: job.address,
-        chainId: job.chainId,
+        address: job.address!,
+        chainId: job.chainId!,
         tokenId: job.tokensIds[0],
         payload,
       });
@@ -133,6 +136,7 @@ export class TokensJobsFetchMetadataService {
     });
     await parallel(10, jobs, async (job) => {
       await this.queue.add(
+        TokenJobJobs.ExecuteFetchMetadataByJob,
         {
           jobId: job.id,
         },
@@ -167,6 +171,13 @@ export class TokensJobsFetchMetadataService {
     payload: Record<string, unknown>;
   }) {
     const sanitizePayload = this.sanitizePayload(params.payload);
+    const asset = sanitizePayload.imageRawUrl
+      ? await this.assetRepository.findOne({
+          where: {
+            rawUrl: ILike(sanitizePayload.imageRawUrl),
+          },
+        })
+      : null;
     await this.tokenRepository.update(
       {
         address: params.address,
@@ -179,6 +190,7 @@ export class TokensJobsFetchMetadataService {
         externalUrl: sanitizePayload?.externalUrl,
         imageRawUrl: sanitizePayload?.imageRawUrl,
         metadata: sanitizePayload?.metadata as any,
+        assetId: asset?.id,
       },
     );
   }

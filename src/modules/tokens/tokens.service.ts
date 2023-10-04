@@ -31,6 +31,7 @@ export class TokensService {
         order: { tokenId: 'ASC' },
         relations: {
           contract: true,
+          asset: true,
         },
       },
     ).then((result) => ({
@@ -55,6 +56,7 @@ export class TokensService {
         order: { tokenId: 'ASC' },
         relations: {
           contract: true,
+          asset: true,
         },
       },
     ).then((result) => ({

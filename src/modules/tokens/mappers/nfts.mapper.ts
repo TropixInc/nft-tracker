@@ -28,7 +28,7 @@ export class NftsMapper {
       media: [
         {
           raw: token.imageRawUrl,
-          gateway: token.imageGatewayUrl,
+          gateway: token.asset?.url,
         },
       ],
       metadata: token.metadata,

@@ -5,6 +5,7 @@ import { ChainId } from 'src/common/enums';
 import { lowercase } from 'src/modules/database/database.helpers';
 import { Optional } from 'src/common/interfaces';
 import { ContractEntity } from 'src/modules/contracts/entities/contracts.entity';
+import { TokenAssetEntity } from './tokens-assets.entity';
 
 @Entity({ name: 'tokens' })
 @Index('UNIQUE_TOKEN_ADDRESS_TOKEN_ID_CHAIN', ['address', 'tokenId', 'chainId'], { unique: true })
@@ -33,9 +34,6 @@ export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: true, type: 'text' })
   imageRawUrl?: Optional<string>;
 
-  @Column({ nullable: true, type: 'text' })
-  imageGatewayUrl?: Optional<string>;
-
   @Column({ nullable: true, type: 'jsonb', default: {} })
   metadata: Record<string, unknown> | null;
 
@@ -57,6 +55,14 @@ export class TokenEntity extends BaseEntity implements Token {
   @Index()
   @Column({ nullable: true, type: 'timestamptz' })
   lastOwnerAddressChangeAt?: Optional<Date>;
+
+  @Index()
+  @Column({ nullable: true, type: 'uuid' })
+  assetId?: Optional<string>;
+
+  @ManyToOne(() => TokenAssetEntity)
+  @JoinColumn()
+  asset?: Optional<TokenAssetEntity>;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;

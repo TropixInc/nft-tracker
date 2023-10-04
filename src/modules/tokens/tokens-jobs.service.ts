@@ -23,14 +23,16 @@ export class TokensJobsService {
   createJob(params: {
     tokensIds: string[];
     tokensUris?: Optional<string[]>;
-    address: string;
-    chainId: ChainId;
+    address?: Optional<string>;
+    chainId?: Optional<ChainId>;
     type: TokenJobType;
+    assetUri?: Optional<string>;
     executeAt?: Optional<Date>;
   }): Promise<TokenJobEntity> {
     return this.tokenJobRepository.save({
       tokensIds: params.tokensIds,
       tokensUris: params.tokensUris,
+      assetUri: params.assetUri,
       address: params.address,
       chainId: params.chainId,
       type: params.type,

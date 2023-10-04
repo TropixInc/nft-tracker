@@ -14,7 +14,7 @@ export interface CloudinaryConfig {
   cloudName: string;
   apiKey: string;
   apiSecret: string;
-  folder: string;
+  uploadPreset: string;
 }
 
 export interface AppConfig {
@@ -109,7 +109,7 @@ export const validationSchema = Joi.object<EnvironmentVariables, true>({
         cloudName: Joi.string().required(),
         apiKey: Joi.string().required(),
         apiSecret: Joi.string().required(),
-        folder: Joi.string().required(),
+        uploadPreset: Joi.string().required(),
       })
       .required(),
     messages: {

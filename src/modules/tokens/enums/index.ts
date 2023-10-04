@@ -9,4 +9,12 @@ export enum TokenJobType {
   VerifyMint = 'verify_mint',
   FetchMetadata = 'fetch_metadata',
   FetchOwnerAddress = 'fetch_owner_address',
+  UploadAsset = 'upload_asset',
+}
+
+export enum TokenAssetStatus {
+  Created = 'created',
+  Uploading = 'uploading',
+  Uploaded = 'uploaded',
+  Failed = 'failed',
 }

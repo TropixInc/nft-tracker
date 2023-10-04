@@ -9,6 +9,7 @@ import { LocalQueueEnum, TokenJobJobs } from 'modules/queue/enums';
 import { TokensJobsFetchMetadataService } from '../tokens-jobs-fetch-metadata.service';
 import { TokensJobsVerifyMintService } from '../tokens-jobs-verify-mint.service';
 import { TokensJobsFetchOwnerAddressService } from '../tokens-jobs-fetch-owner-address.service';
+import { TokensJobsUploadAssetService } from '../tokens-jobs-upload-asset.service';
 
 @Processor(LocalQueueEnum.TokenJob)
 export class TokenJobProcessor
@@ -18,6 +19,7 @@ export class TokenJobProcessor
       | 'checkJobFrozen'
       | 'executeFetchMetadata'
       | 'executeFetchOwnerAddress'
+      | 'executeUploadAsset'
       | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
     >
@@ -30,6 +32,7 @@ export class TokenJobProcessor
     private readonly verifyMintService: TokensJobsVerifyMintService,
     private readonly fetchMetadataService: TokensJobsFetchMetadataService,
     private readonly fetchOwnerAddressService: TokensJobsFetchOwnerAddressService,
+    private readonly uploadAssetService: TokensJobsUploadAssetService,
   ) {}
 
   @LoggerContext()
@@ -82,7 +85,7 @@ export class TokenJobProcessor
     await this.verifyMintService.execute();
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeFetchMetadataHandler(job: Job<{ jobId: string }>) {
     await this.fetchMetadataService.execute(job.data.jobId);
@@ -94,6 +97,12 @@ export class TokenJobProcessor
     await this.fetchOwnerAddressService.execute(job.data.jobId);
   }
 
+  @Process({ name: TokenJobJobs.ExecuteUploadAssetByJob, concurrency: 5 })
+  @LoggerContext({ logError: true })
+  async executeUploadAssetHandler(job: Job<{ jobId: string }>) {
+    await this.uploadAssetService.execute(job.data.jobId);
+  }
+
   @Process({ name: TokenJobJobs.CheckJobFrozen })
   @LoggerContext({ logError: true })
   async checkJobFrozenHandler() {
@@ -101,6 +110,7 @@ export class TokenJobProcessor
       this.verifyMintService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchMetadataService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchOwnerAddressService.checkJobsHaveAlreadyStartedButNotFinished(),
+      this.uploadAssetService.checkJobsHaveAlreadyStartedButNotFinished(),
     ]);
   }
 
@@ -109,8 +119,10 @@ export class TokenJobProcessor
   async createFetchJobsHandler() {
     await Promise.all([
       this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
+      this.uploadAssetService.checkTokensWithoutMediaCache(),
       this.fetchMetadataService.scheduleNextJobs(),
       this.fetchOwnerAddressService.scheduleNextJobs(),
+      this.uploadAssetService.scheduleNextJobs(),
     ]);
   }
 

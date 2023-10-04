@@ -11,9 +11,11 @@ import { TokensJobsVerifyMintService } from './tokens-jobs-verify-mint.service';
 import { TokensJobsService } from './tokens-jobs.service';
 import { TokensJobsFetchMetadataService } from './tokens-jobs-fetch-metadata.service';
 import { TokensJobsFetchOwnerAddressService } from './tokens-jobs-fetch-owner-address.service';
+import { TokenAssetEntity } from './entities/tokens-assets.entity';
+import { TokensJobsUploadAssetService } from './tokens-jobs-upload-asset.service';
 
 @Module({
-  imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity]), BlockchainModule],
+  imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity]), BlockchainModule],
   controllers: [TokensController],
   providers: [
     TokensService,
@@ -22,6 +24,7 @@ import { TokensJobsFetchOwnerAddressService } from './tokens-jobs-fetch-owner-ad
     TokensJobsFetchMetadataService,
     TokensJobsFetchOwnerAddressService,
     TokenJobProcessor,
+    TokensJobsUploadAssetService,
   ],
   exports: [TokensService, TokensJobsService],
 })

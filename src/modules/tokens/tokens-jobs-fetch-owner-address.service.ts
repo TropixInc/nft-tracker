@@ -45,14 +45,14 @@ export class TokensJobsFetchOwnerAddressService {
         status: TokenJobStatus.Started,
         startedAt: new Date(),
       });
-      const contract = await this.eRC721Provider.create(job.address, job.chainId);
+      const contract = await this.eRC721Provider.create(job.address!, job.chainId!);
       await parallel(5, job.tokensIds, async (tokenId) => {
         const ownerAddress = await contract.getOwnerOf(tokenId);
         if (isString(ownerAddress)) {
           await this.tokenRepository.update(
             {
-              address: job.address,
-              chainId: job.chainId,
+              address: job.address!,
+              chainId: job.chainId!,
               tokenId,
               ownerAddress: Not(ownerAddress?.toLowerCase()),
             },
@@ -64,8 +64,8 @@ export class TokensJobsFetchOwnerAddressService {
         }
         await this.tokenRepository.update(
           {
-            address: job.address,
-            chainId: job.chainId,
+            address: job.address!,
+            chainId: job.chainId!,
             tokenId,
           },
           {
@@ -146,6 +146,7 @@ export class TokensJobsFetchOwnerAddressService {
     });
     await parallel(10, jobs, async (job) => {
       await this.queue.add(
+        TokenJobJobs.ExecuteFetchOwnerAddressByJob,
         {
           jobId: job.id,
         },
