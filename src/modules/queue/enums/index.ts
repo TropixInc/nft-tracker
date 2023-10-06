@@ -16,6 +16,7 @@ export enum TokenJobJobs {
   ExecuteVerifyMint = 'executeVerifyMint',
   CheckJobFrozen = 'checkJobFrozen',
   ExecuteFetchMetadataByJob = 'executeFetchMetadataByJob',
+  ExecuteRefreshTokenByJob = 'executeRefreshTokenByJob',
   ExecuteUploadAssetByJob = 'executeUploadAssetByJob',
   CreateFetchJobs = 'createFetchJobs',
   CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',

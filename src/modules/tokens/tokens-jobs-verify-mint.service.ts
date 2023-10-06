@@ -104,7 +104,7 @@ export class TokensJobsVerifyMintService {
     });
   }
 
-  private async verifyMintByTokensIds(
+  async verifyMintByTokensIds(
     params: {
       tokensIds: string[];
       address: string;

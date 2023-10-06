@@ -10,6 +10,7 @@ import { TokensJobsFetchMetadataService } from '../tokens-jobs-fetch-metadata.se
 import { TokensJobsVerifyMintService } from '../tokens-jobs-verify-mint.service';
 import { TokensJobsFetchOwnerAddressService } from '../tokens-jobs-fetch-owner-address.service';
 import { TokensJobsUploadAssetService } from '../tokens-jobs-upload-asset.service';
+import { TokensJobsRefreshTokenService } from '../tokens-jobs-refresh-token.service';
 
 @Processor(LocalQueueEnum.TokenJob)
 export class TokenJobProcessor
@@ -20,6 +21,7 @@ export class TokenJobProcessor
       | 'executeFetchMetadata'
       | 'executeFetchOwnerAddress'
       | 'executeUploadAsset'
+      | 'executeRefreshToken'
       | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
     >
@@ -33,6 +35,7 @@ export class TokenJobProcessor
     private readonly fetchMetadataService: TokensJobsFetchMetadataService,
     private readonly fetchOwnerAddressService: TokensJobsFetchOwnerAddressService,
     private readonly uploadAssetService: TokensJobsUploadAssetService,
+    private readonly refreshTokenService: TokensJobsRefreshTokenService,
   ) {}
 
   @LoggerContext()
@@ -103,6 +106,12 @@ export class TokenJobProcessor
     await this.uploadAssetService.execute(job.data.jobId);
   }
 
+  @Process({ name: TokenJobJobs.ExecuteRefreshTokenByJob, concurrency: 5 })
+  @LoggerContext({ logError: true })
+  async executeRefreshTokenHandler(job: Job<{ jobId: string }>) {
+    await this.refreshTokenService.execute(job.data.jobId);
+  }
+
   @Process({ name: TokenJobJobs.CheckJobFrozen })
   @LoggerContext({ logError: true })
   async checkJobFrozenHandler() {
@@ -123,6 +132,7 @@ export class TokenJobProcessor
       this.fetchMetadataService.scheduleNextJobs(),
       this.fetchOwnerAddressService.scheduleNextJobs(),
       this.uploadAssetService.scheduleNextJobs(),
+      this.refreshTokenService.scheduleNextJobs(),
     ]);
   }
 

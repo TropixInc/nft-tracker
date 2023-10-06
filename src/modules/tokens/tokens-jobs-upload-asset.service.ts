@@ -56,12 +56,7 @@ export class TokensJobsUploadAssetService {
         startedAt: new Date(),
       });
       this.logger.debug(`Executing upload asset by ${job.assetUri}`);
-      const asset = await this.uploadAsset(job.assetUri);
-      await this.updateAssetToken({
-        publicId: asset.publicId,
-        rawUri: job.assetUri,
-        url: asset.url,
-      });
+      await this.uploadAssetAndUpdateToken({ assetUri: job.assetUri });
       await this.tokenJobRepository.manager.update(TokenJobEntity, job.id, {
         status: TokenJobStatus.Completed,
         completeAt: new Date(),
@@ -75,6 +70,15 @@ export class TokensJobsUploadAssetService {
       });
       throw error;
     }
+  }
+
+  async uploadAssetAndUpdateToken(params: { assetUri: string }): Promise<void> {
+    const asset = await this.uploadAsset(params.assetUri);
+    await this.updateAssetToken({
+      publicId: asset.publicId,
+      rawUri: params.assetUri,
+      url: asset.url,
+    });
   }
 
   async checkJobsHaveAlreadyStartedButNotFinished(): Promise<void> {

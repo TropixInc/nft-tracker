@@ -50,16 +50,15 @@ export class TokensJobsFetchMetadataService {
         status: TokenJobStatus.Started,
         startedAt: new Date(),
       });
-      const payload = await this.fetchMetadata(job.tokensUris[0]);
+      await this.fetchMetadataByTokenAndUpdate({
+        tokenId: job.tokensIds[0],
+        address: job.address!,
+        chainId: job.chainId!,
+        tokenUri: job.tokensUris[0],
+      });
       await this.tokenJobRepository.manager.update(TokenJobEntity, job.id, {
         status: TokenJobStatus.Completed,
         completeAt: new Date(),
-      });
-      await this.updateMetadataToken({
-        address: job.address!,
-        chainId: job.chainId!,
-        tokenId: job.tokensIds[0],
-        payload,
       });
       this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
     } catch (error) {
@@ -70,6 +69,21 @@ export class TokensJobsFetchMetadataService {
       });
       throw error;
     }
+  }
+
+  async fetchMetadataByTokenAndUpdate(params: {
+    tokenUri: string;
+    address: string;
+    chainId: ChainId;
+    tokenId: string;
+  }): Promise<void> {
+    const payload = await this.fetchMetadata(params.tokenUri);
+    await this.updateMetadataToken({
+      address: params.address,
+      chainId: params.chainId,
+      tokenId: params.tokenId,
+      payload,
+    });
   }
 
   async checkJobsHaveAlreadyStartedButNotFinished(): Promise<void> {

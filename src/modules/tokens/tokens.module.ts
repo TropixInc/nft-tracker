@@ -13,6 +13,7 @@ import { TokensJobsFetchMetadataService } from './tokens-jobs-fetch-metadata.ser
 import { TokensJobsFetchOwnerAddressService } from './tokens-jobs-fetch-owner-address.service';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokensJobsUploadAssetService } from './tokens-jobs-upload-asset.service';
+import { TokensJobsRefreshTokenService } from './tokens-jobs-refresh-token.service';
 
 @Module({
   imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity]), BlockchainModule],
@@ -25,6 +26,7 @@ import { TokensJobsUploadAssetService } from './tokens-jobs-upload-asset.service
     TokensJobsFetchOwnerAddressService,
     TokenJobProcessor,
     TokensJobsUploadAssetService,
+    TokensJobsRefreshTokenService,
   ],
   exports: [TokensService, TokensJobsService],
 })
