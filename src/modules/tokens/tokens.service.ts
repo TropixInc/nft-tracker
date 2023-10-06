@@ -3,14 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isArray } from 'class-validator';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { runTransaction } from 'src/common/helpers/transaction.helper';
-import { DatabaseFunctionOptions } from 'src/common/interfaces';
+import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
 import { FindOptionsWhere, ILike, In, Repository } from 'typeorm';
-import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
+import { ContractNotFoundException } from '../contracts/exceptions';
 import { ContractAddressTokensRequestDto } from './dtos/contract-address-tokens-request.dto';
+import { NftByTokenRequestDto } from './dtos/nft-by-token-request.dto';
 import { OwnerAddressTokensRequestDto } from './dtos/owner-address-tokens-request.dto';
 import { TokenEntity, TokenModel } from './entities/tokens.entity';
-import { ContractNotFoundException } from './exceptions';
+import { TokenNotFoundException } from './exceptions';
+import { Nft } from './interfaces';
 import { NftsMapper } from './mappers/nfts.mapper';
+import { TokensJobsService } from './tokens-jobs.service';
 
 @Injectable()
 export class TokensService {
@@ -19,7 +22,7 @@ export class TokensService {
   constructor(
     @InjectRepository(TokenEntity)
     private repository: Repository<TokenEntity>,
-    private eRC721Provider: ERC721Provider,
+    private tokensJobsService: TokensJobsService,
   ) {}
 
   findByAddressAndChainId(pagination: ContractAddressTokensRequestDto) {
@@ -82,5 +85,27 @@ export class TokensService {
       }
       return entity;
     });
+  }
+
+  async findByToken(request: NftByTokenRequestDto): Promise<Optional<Nft>> {
+    if (request.refreshCache) {
+      await this.tokensJobsService.createRefreshTokenJob({
+        chainId: request.chainId,
+        address: request.contractAddress,
+        tokenId: request.tokenId,
+        executeAt: new Date(),
+      });
+    }
+    const token = await this.repository.findOne({
+      where: { chainId: request.chainId, address: request.contractAddress, tokenId: request.tokenId },
+      relations: {
+        contract: true,
+        asset: true,
+      },
+    });
+    if (!token) {
+      throw new TokenNotFoundException(request.contractAddress, request.chainId, request.tokenId);
+    }
+    return NftsMapper.toPublic(token);
   }
 }

@@ -10,6 +10,7 @@ export enum TokenJobType {
   FetchMetadata = 'fetch_metadata',
   FetchOwnerAddress = 'fetch_owner_address',
   UploadAsset = 'upload_asset',
+  RefreshToken = 'refresh_token',
 }
 
 export enum TokenAssetStatus {
