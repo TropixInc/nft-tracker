@@ -6,7 +6,8 @@ RUN npm i -g zx
 # Set node environment
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
-
+ARG GITHUB_TOKEN
+ENV GITHUB_TOKEN=${GITHUB_TOKEN}
 # Set working directory
 WORKDIR /app
 
