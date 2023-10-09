@@ -17,6 +17,7 @@ export const setupSwagger = (app: INestApplication) => {
     .setTitle('NFT Tracker')
     .setVersion(packageJSON.version)
     .addServer(configService.get('base_url'), 'NFT Tracker Server', {})
+    .addApiKey({ type: 'apiKey', in: 'header', name: 'api-key', description: 'API Key' }, 'x-api-key')
     .build();
   const document = SwaggerModule.createDocument(app, config, {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,

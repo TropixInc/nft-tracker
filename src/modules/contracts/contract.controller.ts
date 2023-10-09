@@ -1,6 +1,6 @@
-import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ContractService } from './contract.service';
 import { TypedResponse } from 'src/common/decorators/typed-response.decorator';
 import { ChainId } from 'src/common/enums';
@@ -9,8 +9,11 @@ import { ContractAlreadyExistsException } from './exceptions';
 import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractModel } from './entities/contracts.entity';
 import { ContractDto } from './dtos/contract-entity.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Contracts')
+@UseGuards(AuthGuard('api-key'))
+@ApiBearerAuth('api-key')
 @Controller('contracts')
 export class ContractController {
   constructor(private readonly service: ContractService) {}

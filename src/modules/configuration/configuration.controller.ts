@@ -1,11 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UnprocessableEntityException,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ConfigurationService } from './configuration.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 
-@ApiBearerAuth()
+@ApiBearerAuth('api-key')
+@UseGuards(AuthGuard('api-key'))
 @ApiTags('App')
 @Controller('configuration')
 export class ConfigurationController {

@@ -6,6 +6,7 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "apikey",
         "cloudinary",
         "dtos",
         "ethersproject",
