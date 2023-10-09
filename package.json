@@ -47,7 +47,7 @@
     "@ethersproject/constants": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/web": "^5.7.1",
-    "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.10",
+    "@nanogiants/nestjs-swagger-api-exception-decorator": "^1.6.11",
     "@nestjs/axios": "3.0.0",
     "@nestjs/bull": "10.0.1",
     "@nestjs/cache-manager": "^2.1.0",
