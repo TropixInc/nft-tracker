@@ -12,11 +12,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { HEADER_API_KEY } from '../auth/constants';
 import { ConfigurationService } from './configuration.service';
 import { CreateConfigurationDto } from './dto/create-configuration.dto';
 import { UpdateConfigurationDto } from './dto/update-configuration.dto';
 
-@ApiBearerAuth('api-key')
+@ApiBearerAuth(HEADER_API_KEY)
 @UseGuards(AuthGuard('api-key'))
 @ApiTags('App')
 @Controller('configuration')

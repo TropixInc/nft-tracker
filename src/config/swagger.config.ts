@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HEADER_API_KEY } from 'src/modules/auth/constants';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import * as packageJSON from '../../package.json';
@@ -17,7 +18,7 @@ export const setupSwagger = (app: INestApplication) => {
     .setTitle('NFT Tracker')
     .setVersion(packageJSON.version)
     .addServer(configService.get('base_url'), 'NFT Tracker Server', {})
-    .addApiKey({ type: 'apiKey', in: 'header', name: 'api-key', description: 'API Key' }, 'x-api-key')
+    .addApiKey({ type: 'apiKey', in: 'header', name: HEADER_API_KEY, description: 'API Key' }, HEADER_API_KEY)
     .build();
   const document = SwaggerModule.createDocument(app, config, {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,

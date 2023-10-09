@@ -10,10 +10,11 @@ import { CreateContractDto } from './dtos/create-contract.dto';
 import { ContractModel } from './entities/contracts.entity';
 import { ContractDto } from './dtos/contract-entity.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { HEADER_API_KEY } from '../auth/constants';
 
 @ApiTags('Contracts')
 @UseGuards(AuthGuard('api-key'))
-@ApiBearerAuth('api-key')
+@ApiBearerAuth(HEADER_API_KEY)
 @Controller('contracts')
 export class ContractController {
   constructor(private readonly service: ContractService) {}
