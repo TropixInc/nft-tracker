@@ -29,6 +29,7 @@ import { ApplicationEnvEnum } from 'common/enums';
 import { ContractModule } from './modules/contracts/contract.module';
 import { BlockchainModule } from './modules/blockchain/blockchain.module';
 import { TokensModule } from './modules/tokens/tokens.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { TokensModule } from './modules/tokens/tokens.module';
     ContractModule,
     BlockchainModule,
     TokensModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

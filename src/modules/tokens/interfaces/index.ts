@@ -1,6 +1,6 @@
 import { ChainId } from 'common/enums';
 import { Optional } from 'src/common/interfaces';
-import { TokenJobStatus, TokenJobType } from '../enums';
+import { TokenAssetStatus, TokenJobStatus, TokenJobType } from '../enums';
 
 export interface Token {
   id: string;
@@ -11,14 +11,15 @@ export interface Token {
   description?: Optional<string>;
   externalUrl?: Optional<string>;
   imageRawUrl?: Optional<string>;
-  imageGatewayUrl?: Optional<string>;
   chainId: ChainId;
   metadata: Record<string, unknown> | null;
+  assetId?: Optional<string>;
+  asset?: Optional<TokenAsset>;
 }
 
 export interface TokenJob {
-  address: string;
-  chainId: ChainId;
+  address?: Optional<string>;
+  chainId?: Optional<ChainId>;
   tokensIds: string[];
   tokensUris?: Optional<string[]>;
   executeAt?: Optional<Date>;
@@ -53,4 +54,12 @@ export interface Nft {
     gateway?: Optional<string>;
   }[];
   metadata?: Optional<Record<string, unknown>>;
+}
+
+export interface TokenAsset {
+  id: string;
+  rawUrl: string;
+  publicId: string;
+  url?: Optional<string>;
+  status: TokenAssetStatus;
 }

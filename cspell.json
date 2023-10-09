@@ -6,8 +6,11 @@
     "dictionaryDefinitions": [],
     "dictionaries": [],
     "words": [
+        "apikey",
+        "cloudinary",
         "dtos",
         "ethersproject",
+        "ILIKE",
         "ipfs",
         "KHTML",
         "nanogiants",

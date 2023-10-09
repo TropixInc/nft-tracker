@@ -9,6 +9,8 @@ import { LocalQueueEnum, TokenJobJobs } from 'modules/queue/enums';
 import { TokensJobsFetchMetadataService } from '../tokens-jobs-fetch-metadata.service';
 import { TokensJobsVerifyMintService } from '../tokens-jobs-verify-mint.service';
 import { TokensJobsFetchOwnerAddressService } from '../tokens-jobs-fetch-owner-address.service';
+import { TokensJobsUploadAssetService } from '../tokens-jobs-upload-asset.service';
+import { TokensJobsRefreshTokenService } from '../tokens-jobs-refresh-token.service';
 
 @Processor(LocalQueueEnum.TokenJob)
 export class TokenJobProcessor
@@ -18,7 +20,9 @@ export class TokenJobProcessor
       | 'checkJobFrozen'
       | 'executeFetchMetadata'
       | 'executeFetchOwnerAddress'
-      | 'createFetchMetadataJobs'
+      | 'executeUploadAsset'
+      | 'executeRefreshToken'
+      | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
     >
 {
@@ -30,6 +34,8 @@ export class TokenJobProcessor
     private readonly verifyMintService: TokensJobsVerifyMintService,
     private readonly fetchMetadataService: TokensJobsFetchMetadataService,
     private readonly fetchOwnerAddressService: TokensJobsFetchOwnerAddressService,
+    private readonly uploadAssetService: TokensJobsUploadAssetService,
+    private readonly refreshTokenService: TokensJobsRefreshTokenService,
   ) {}
 
   @LoggerContext()
@@ -41,7 +47,7 @@ export class TokenJobProcessor
   async scheduleJobs() {
     const jobs = [
       {
-        name: TokenJobJobs.CreateFetchMetadataJobs,
+        name: TokenJobJobs.CreateFetchJobs,
         cron: CronExpression.EVERY_10_SECONDS,
       },
       {
@@ -51,10 +57,6 @@ export class TokenJobProcessor
       {
         name: TokenJobJobs.ExecuteVerifyMint,
         cron: CronExpression.EVERY_5_SECONDS,
-      },
-      {
-        name: TokenJobJobs.ExecuteFetchOwnerAddress,
-        cron: CronExpression.EVERY_SECOND,
       },
       {
         name: TokenJobJobs.CheckJobFrozen,
@@ -86,17 +88,28 @@ export class TokenJobProcessor
     await this.verifyMintService.execute();
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeFetchMetadataHandler(job: Job<{ jobId: string }>) {
-    this.logger.debug(`Executing queue ${job.data.jobId}`);
     await this.fetchMetadataService.execute(job.data.jobId);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddress, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddressByJob, concurrency: 5 })
   @LoggerContext({ logError: true })
-  async executeFetchOwnerAddressHandler() {
-    await this.fetchOwnerAddressService.execute();
+  async executeFetchOwnerAddressHandler(job: Job<{ jobId: string }>) {
+    await this.fetchOwnerAddressService.execute(job.data.jobId);
+  }
+
+  @Process({ name: TokenJobJobs.ExecuteUploadAssetByJob, concurrency: 5 })
+  @LoggerContext({ logError: true })
+  async executeUploadAssetHandler(job: Job<{ jobId: string }>) {
+    await this.uploadAssetService.execute(job.data.jobId);
+  }
+
+  @Process({ name: TokenJobJobs.ExecuteRefreshTokenByJob, concurrency: 5 })
+  @LoggerContext({ logError: true })
+  async executeRefreshTokenHandler(job: Job<{ jobId: string }>) {
+    await this.refreshTokenService.execute(job.data.jobId);
   }
 
   @Process({ name: TokenJobJobs.CheckJobFrozen })
@@ -106,15 +119,20 @@ export class TokenJobProcessor
       this.verifyMintService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchMetadataService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchOwnerAddressService.checkJobsHaveAlreadyStartedButNotFinished(),
+      this.uploadAssetService.checkJobsHaveAlreadyStartedButNotFinished(),
     ]);
   }
 
-  @Process({ name: TokenJobJobs.CreateFetchMetadataJobs })
+  @Process({ name: TokenJobJobs.CreateFetchJobs })
   @LoggerContext({ logError: true })
-  async createFetchMetadataJobsHandler() {
+  async createFetchJobsHandler() {
     await Promise.all([
       this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
+      this.uploadAssetService.checkTokensWithoutMediaCache(),
       this.fetchMetadataService.scheduleNextJobs(),
+      this.fetchOwnerAddressService.scheduleNextJobs(),
+      this.uploadAssetService.scheduleNextJobs(),
+      this.refreshTokenService.scheduleNextJobs(),
     ]);
   }
 

@@ -36,8 +36,8 @@ export class TokensJobsVerifyMintService {
         const countTokensFound = await this.verifyMintByTokensIds(
           {
             tokensIds: job.tokensIds,
-            address: job.address,
-            chainId: job.chainId,
+            address: job.address!,
+            chainId: job.chainId!,
           },
           { queryRunnerArg: queryRunner },
         );
@@ -45,16 +45,17 @@ export class TokensJobsVerifyMintService {
           status: TokenJobStatus.Completed,
           completeAt: new Date(),
         });
-        if (countTokensFound === 0) return Promise.resolve();
-        await queryRunner.manager.save(TokenJobEntity, {
-          address: job.address,
-          chainId: job.chainId,
-          type: TokenJobType.VerifyMint,
-          status: TokenJobStatus.Created,
-          executeAt: new Date(),
-          tokensIds: this.getNextSequentialFromTokensIds(job.tokensIds),
-        });
-        this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
+        if (countTokensFound !== 0) {
+          await queryRunner.manager.save(TokenJobEntity, {
+            address: job.address,
+            chainId: job.chainId,
+            type: TokenJobType.VerifyMint,
+            status: TokenJobStatus.Created,
+            executeAt: new Date(),
+            tokensIds: this.getNextSequentialFromTokensIds(job.tokensIds),
+          });
+          this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
+        }
       } catch (error) {
         this.logger.error(error);
         await this.tokenJobRepository.update(job.id, {
@@ -103,7 +104,7 @@ export class TokensJobsVerifyMintService {
     });
   }
 
-  private async verifyMintByTokensIds(
+  async verifyMintByTokensIds(
     params: {
       tokensIds: string[];
       address: string;
@@ -121,21 +122,22 @@ export class TokensJobsVerifyMintService {
           const uri = await contract.getTokenUri(tokenId);
           const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
           if (!tokenUri) {
-            this.logger.error(`TokenUri is not valid for token ${tokenId}`);
-            return Promise.resolve();
+            this.logger.error(`TokenUri is not valid for token ${params.address}/${params.chainId}/${tokenId}`);
+            await Promise.resolve();
+          } else {
+            const ownerAddress = await contract.getOwnerOf(tokenId);
+            await this.upsertToken(
+              {
+                address: params.address,
+                chainId: params.chainId,
+                tokenId,
+                tokenUri,
+                ownerAddress,
+              },
+              { queryRunnerArg: queryRunner },
+            );
+            countTokensFound++;
           }
-          const ownerAddress = await contract.getOwnerOf(tokenId);
-          await this.upsertToken(
-            {
-              address: params.address,
-              chainId: params.chainId,
-              tokenId,
-              tokenUri,
-              ownerAddress,
-            },
-            { queryRunnerArg: queryRunner },
-          );
-          countTokensFound++;
         });
         return countTokensFound;
       },

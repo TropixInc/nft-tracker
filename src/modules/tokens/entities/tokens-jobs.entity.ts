@@ -9,12 +9,12 @@ import { TokenJobStatus, TokenJobType } from '../enums';
 @Entity({ name: 'tokens_jobs' })
 export class TokenJobEntity extends BaseEntity implements TokenJob {
   @Index()
-  @Column({ nullable: false, transformer: [lowercase] })
-  address: string;
+  @Column({ nullable: true, transformer: [lowercase], type: 'varchar' })
+  address?: Optional<string>;
 
   @Index()
-  @Column({ nullable: false, type: 'integer' })
-  chainId: ChainId;
+  @Column({ nullable: true, type: 'integer' })
+  chainId?: Optional<ChainId>;
 
   @Index()
   @Column({ nullable: false, array: true, type: 'text' })
@@ -22,6 +22,10 @@ export class TokenJobEntity extends BaseEntity implements TokenJob {
 
   @Column({ nullable: true, type: 'text', array: true })
   tokensUris?: Optional<string[]>;
+
+  @Index()
+  @Column({ nullable: true, type: 'text' })
+  assetUri?: Optional<string>;
 
   @Column({ nullable: true, type: 'timestamptz' })
   executeAt?: Optional<Date>;

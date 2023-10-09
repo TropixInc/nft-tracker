@@ -25,7 +25,7 @@ import { gracefulShutdownFn } from 'common/helpers/app.helpers';
 import { ApplicationEnvEnum } from 'common/enums';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bufferLogs: true, cors: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
 
   app.use(
     helmet({

@@ -1,10 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChainId } from 'common/enums';
-import { runTransaction } from 'common/helpers/transaction.helper';
 import { subMinutes } from 'date-fns';
-import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
-import { LessThan, Not, QueryRunner, Repository } from 'typeorm';
+import { LessThan, Not, Repository } from 'typeorm';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
@@ -12,6 +10,9 @@ import { TokensJobsService } from './tokens-jobs.service';
 import { parallel, cluster } from 'radash';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { isString } from 'class-validator';
+import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class TokensJobsFetchOwnerAddressService {
@@ -24,58 +25,66 @@ export class TokensJobsFetchOwnerAddressService {
     private readonly tokenRepository: Repository<TokenEntity>,
     private readonly tokensJobsService: TokensJobsService,
     private eRC721Provider: ERC721Provider,
+    @InjectQueue(LocalQueueEnum.TokenJob)
+    private readonly queue: Queue,
   ) {}
 
-  async execute(): Promise<void> {
-    await runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
-      const job = await this.getNextJob(queryRunner);
-      if (!job || !job.tokensIds?.length) {
-        return Promise.resolve();
-      }
-      try {
-        await this.tokenJobRepository.update(job.id, {
-          status: TokenJobStatus.Started,
-          startedAt: new Date(),
-        });
-        const contract = await this.eRC721Provider.create(job.address, job.chainId);
-        await parallel(5, job.tokensIds, async (tokenId) => {
-          const ownerAddress = await contract.getOwnerOf(tokenId);
-          if (isString(ownerAddress)) {
-            await this.updateOwnerAddressToken(
-              {
-                address: job.address,
-                chainId: job.chainId,
-                tokenId,
-                ownerAddress,
-              },
-              { queryRunnerArg: queryRunner },
-            );
-          }
-          await queryRunner.manager.update(
-            TokenEntity,
+  async execute(jobId: string): Promise<void> {
+    const job = await this.tokenJobRepository.findOne({
+      where: {
+        id: jobId,
+        status: TokenJobStatus.Created,
+        executeAt: LessThan(new Date()),
+      },
+    });
+    if (!job || !job.tokensIds?.length) {
+      return Promise.resolve();
+    }
+    try {
+      await this.tokenJobRepository.update(job.id, {
+        status: TokenJobStatus.Started,
+        startedAt: new Date(),
+      });
+      const contract = await this.eRC721Provider.create(job.address!, job.chainId!);
+      await parallel(5, job.tokensIds, async (tokenId) => {
+        const ownerAddress = await contract.getOwnerOf(tokenId);
+        if (isString(ownerAddress)) {
+          await this.tokenRepository.update(
             {
-              address: job.address,
-              chainId: job.chainId,
+              address: job.address!,
+              chainId: job.chainId!,
               tokenId,
+              ownerAddress: Not(ownerAddress?.toLowerCase()),
             },
             {
-              lastOwnerAddressCheckAt: new Date(),
+              ownerAddress: ownerAddress?.toLowerCase(),
+              lastOwnerAddressChangeAt: new Date(),
             },
           );
-        });
-        await queryRunner.manager.update(TokenJobEntity, job.id, {
-          status: TokenJobStatus.Completed,
-          completeAt: new Date(),
-        });
-      } catch (error) {
-        this.logger.error(error);
-        await this.tokenJobRepository.update(job.id, {
-          status: TokenJobStatus.Failed,
-          failedAt: new Date(),
-        });
-        throw error;
-      }
-    });
+        }
+        await this.tokenRepository.update(
+          {
+            address: job.address!,
+            chainId: job.chainId!,
+            tokenId,
+          },
+          {
+            lastOwnerAddressCheckAt: new Date(),
+          },
+        );
+      });
+      await this.tokenJobRepository.manager.update(TokenJobEntity, job.id, {
+        status: TokenJobStatus.Completed,
+        completeAt: new Date(),
+      });
+    } catch (error) {
+      this.logger.error(error);
+      await this.tokenJobRepository.update(job.id, {
+        status: TokenJobStatus.Failed,
+        failedAt: new Date(),
+      });
+      throw error;
+    }
   }
 
   async checkJobsHaveAlreadyStartedButNotFinished(): Promise<void> {
@@ -120,8 +129,8 @@ export class TokensJobsFetchOwnerAddressService {
     }
   }
 
-  private async getNextJob(queryRunner: QueryRunner): Promise<Optional<TokenJobEntity>> {
-    return queryRunner.manager.findOne(TokenJobEntity, {
+  async scheduleNextJobs(): Promise<void> {
+    const jobs = await this.tokenJobRepository.find({
       where: {
         status: TokenJobStatus.Created,
         type: TokenJobType.FetchOwnerAddress,
@@ -130,35 +139,27 @@ export class TokensJobsFetchOwnerAddressService {
       order: {
         executeAt: 'ASC',
       },
-      lock: {
-        mode: 'for_key_share',
-        onLocked: 'skip_locked',
+      take: 30,
+      select: {
+        id: true,
       },
     });
-  }
-
-  private updateOwnerAddressToken(
-    params: { address: string; chainId: ChainId; tokenId: string; ownerAddress?: Optional<string> },
-    opts?: DatabaseFunctionOptions,
-  ) {
-    return runTransaction<void>(
-      this.tokenJobRepository.manager,
-      async (queryRunner) => {
-        await queryRunner.manager.update(
-          TokenEntity,
-          {
-            address: params.address,
-            chainId: params.chainId,
-            tokenId: params.tokenId,
-            ownerAddress: Not(params.ownerAddress?.toLowerCase()),
+    await parallel(10, jobs, async (job) => {
+      await this.queue.add(
+        TokenJobJobs.ExecuteFetchOwnerAddressByJob,
+        {
+          jobId: job.id,
+        },
+        {
+          jobId: `${TokenJobJobs.ExecuteFetchOwnerAddressByJob}:${job.id}`,
+          attempts: 3,
+          removeOnComplete: {
+            age: 2 * 60,
+            count: 1000,
           },
-          {
-            ownerAddress: params.ownerAddress?.toLowerCase(),
-            lastOwnerAddressChangeAt: new Date(),
-          },
-        );
-      },
-      opts?.queryRunnerArg,
-    );
+          removeOnFail: true,
+        },
+      );
+    });
   }
 }
