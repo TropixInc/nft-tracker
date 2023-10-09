@@ -38,7 +38,7 @@ export class EthereumService {
       case ChainId.MOONBEAM:
         return 'https://rpc.api.moonbeam.network';
       case ChainId.MOONRIVER:
-        return ' https://rpc.api.moonriver.moonbeam.network';
+        return 'https://rpc.api.moonriver.moonbeam.network';
       case ChainId.MUMBAI:
         return 'https://rpc-mumbai.maticvigil.com';
       case ChainId.POLYGON:

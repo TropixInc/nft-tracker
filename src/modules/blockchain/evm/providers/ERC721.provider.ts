@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { isURL } from 'class-validator';
 import { BigNumberish } from 'ethers';
 import { isString } from 'lodash';
 import { ChainId } from 'src/common/enums';
@@ -8,6 +9,7 @@ import { AppConfig } from 'src/config/app.config';
 import { EthereumService } from '../ethereum.service';
 import { ERC721 } from '../interfaces/ERC721';
 import erc721Abi from '../static/erc721.abi.json';
+import { isIPFSHash } from '../utils';
 
 @Injectable()
 export class ERC721Provider extends EthereumService {
@@ -68,6 +70,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
     try {
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
+      console.log(error);
       return await this.getUri(tokenId);
     }
   }
@@ -111,12 +114,18 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
       uri = `${baseUri}/${tokenUri}`;
     }
 
-    return this.sanitizeTokenUri(uri, tokenId);
+    uri = this.sanitizeTokenUri(uri, tokenId);
+
+    return uri;
   }
 
   sanitizeTokenUri(tokenUri: string, tokenId: string): string {
-    return tokenUri
+    const uri = tokenUri
       .replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/')
       .replace('{id}', BigInt(tokenId).toString(16).padStart(64, '0'));
+    if (!isURL(uri) && isIPFSHash(uri)) {
+      return `https://ipfs.io/ipfs/${uri}`;
+    }
+    return uri;
   }
 }
