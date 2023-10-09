@@ -74,12 +74,15 @@ export class TokensJobsRefreshTokenService {
         chainId: job.chainId!,
         tokenId: job.tokensIds[0],
       });
-      if (!token?.imageRawUrl) {
-        throw new Error('Token imageRawUrl is empty');
+
+      if (token?.contract?.cacheMedia) {
+        if (!token?.imageRawUrl) {
+          throw new Error('Token imageRawUrl is empty');
+        }
+        await this.uploadAssetService.uploadAssetAndUpdateToken({
+          assetUri: token?.imageRawUrl,
+        });
       }
-      await this.uploadAssetService.uploadAssetAndUpdateToken({
-        assetUri: token?.imageRawUrl,
-      });
       await this.tokenJobRepository.update(job.id, {
         status: TokenJobStatus.Completed,
         completeAt: new Date(),
@@ -153,6 +156,9 @@ export class TokensJobsRefreshTokenService {
         address: ILike(params.address),
         chainId: params.chainId,
         tokenId: params.tokenId,
+      },
+      relations: {
+        contract: true,
       },
     });
   }
