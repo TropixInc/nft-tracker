@@ -56,6 +56,7 @@ export class TokensJobsVerifyMintService {
           });
           this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
         }
+        await this.updateContractTotalSupply(job.address!, job.chainId!);
       } catch (error) {
         this.logger.error(error);
         await this.tokenJobRepository.update(job.id, {
@@ -179,6 +180,12 @@ export class TokensJobsVerifyMintService {
         });
       },
       opts?.queryRunnerArg,
+    );
+  }
+
+  private async updateContractTotalSupply(address: string, chainId: ChainId) {
+    await this.tokenJobRepository.query(
+      `UPDATE contracts SET total_supply = (SELECT count(1) as total FROM tokens WHERE address ilike '${address}' and chain_id = ${chainId}) WHERE address ilike '${address} and chain_id = ${chainId}'`,
     );
   }
 }
