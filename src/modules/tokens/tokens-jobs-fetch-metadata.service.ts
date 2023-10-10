@@ -2,7 +2,6 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bull';
-import { isURL } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
@@ -10,7 +9,7 @@ import { parallel } from 'radash';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { Optional } from 'src/common/interfaces';
 import { ILike, LessThan, Repository } from 'typeorm';
-import { isIPFSHash } from '../blockchain/evm/utils';
+import { sanitizeUri } from '../blockchain/evm/utils';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
@@ -172,10 +171,10 @@ export class TokensJobsFetchMetadataService {
   private fetchMetadata(tokenUri: string): Promise<Record<string, unknown>> {
     const axiosInstance = RequestHelpers.getInstance().getAxiosInstance();
     return axiosInstance
-      .get(this.sanitizeUri(tokenUri))
+      .get(sanitizeUri(tokenUri))
       .then((response) => response.data)
       .catch((error) => {
-        this.logger.error(`Error fetching metadata from ${this.sanitizeUri(tokenUri)}`, error);
+        this.logger.error(`Error fetching metadata from ${sanitizeUri(tokenUri)}`, error);
         throw error;
       });
   }
@@ -258,18 +257,9 @@ export class TokensJobsFetchMetadataService {
     }
 
     if (result.imageRawUrl) {
-      result.imageRawUrl = this.sanitizeUri(result.imageRawUrl);
+      result.imageRawUrl = sanitizeUri(result.imageRawUrl);
     }
 
     return result;
-  }
-
-  sanitizeUri(uri: string): string {
-    uri = uri.replace(/^ipfs:\/\//, 'https://ipfs.io/ipfs/');
-
-    if (!isURL(uri) && isIPFSHash(uri)) {
-      return `https://ipfs.io/ipfs/${uri}`;
-    }
-    return uri;
   }
 }
