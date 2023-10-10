@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bull';
+import { isJSON, isURL } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
@@ -168,22 +169,28 @@ export class TokensJobsFetchMetadataService {
     });
   }
 
-  private fetchMetadata(tokenUri: string): Promise<Record<string, unknown>> {
-    const axiosInstance = RequestHelpers.getInstance().getAxiosInstance();
-    return axiosInstance
-      .get(sanitizeUri(tokenUri))
-      .then((response) => response.data)
-      .catch((error) => {
-        this.logger.error(`Error fetching metadata from ${sanitizeUri(tokenUri)}`, error);
-        throw error;
-      });
+  private fetchMetadata(tokenUri: string): Promise<Record<string, unknown>> | null {
+    const uri = sanitizeUri(tokenUri);
+    if (isURL(uri)) {
+      const axiosInstance = RequestHelpers.getInstance().getAxiosInstance();
+      return axiosInstance
+        .get(uri)
+        .then((response) => response.data)
+        .catch((error) => {
+          this.logger.error(`Error fetching metadata from ${uri}`, error);
+          throw error;
+        });
+    } else if (isJSON(tokenUri)) {
+      return this.tryJson(tokenUri);
+    }
+    return null;
   }
 
   private async updateMetadataToken(params: {
     address: string;
     chainId: ChainId;
     tokenId: string;
-    payload: Record<string, unknown>;
+    payload?: Optional<Record<string, unknown>>;
   }) {
     const sanitizePayload = this.sanitizePayload(params.payload);
     const asset = sanitizePayload.imageRawUrl
@@ -210,7 +217,7 @@ export class TokensJobsFetchMetadataService {
     );
   }
 
-  private sanitizePayload(payload: Record<string, unknown>): {
+  private sanitizePayload(payload: Optional<Record<string, unknown>>): {
     name?: Optional<string>;
     description?: Optional<string>;
     externalUrl?: Optional<string>;
@@ -261,5 +268,13 @@ export class TokensJobsFetchMetadataService {
     }
 
     return result;
+  }
+
+  tryJson(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
   }
 }
