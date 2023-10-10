@@ -175,8 +175,8 @@ export class TokensJobsFetchMetadataService {
       .get(this.sanitizeUri(tokenUri))
       .then((response) => response.data)
       .catch((error) => {
-        this.logger.error(`Error fetching metadata from ${tokenUri}`, error);
-        return {};
+        this.logger.error(`Error fetching metadata from ${this.sanitizeUri(tokenUri)}`, error);
+        throw error;
       });
   }
 
@@ -265,7 +265,7 @@ export class TokensJobsFetchMetadataService {
   }
 
   sanitizeUri(uri: string): string {
-    uri = uri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
+    uri = uri.replace(/^ipfs:\/\//, 'https://ipfs.io/ipfs/');
 
     if (!isURL(uri) && isIPFSHash(uri)) {
       return `https://ipfs.io/ipfs/${uri}`;

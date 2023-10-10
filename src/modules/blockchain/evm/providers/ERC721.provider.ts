@@ -121,7 +121,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
 
   sanitizeTokenUri(tokenUri: string, tokenId: string): string {
     const uri = tokenUri
-      .replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/')
+      .replace(/^ipfs:\/\//, 'https://ipfs.io/ipfs/')
       .replace('{id}', BigInt(tokenId).toString(16).padStart(64, '0'));
     if (!isURL(uri) && isIPFSHash(uri)) {
       return `https://ipfs.io/ipfs/${uri}`;
