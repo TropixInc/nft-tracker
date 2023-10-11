@@ -82,7 +82,7 @@ export class TokensJobsVerifyMintService {
     );
   }
 
-  private getNextSequentialFromTokensIds(tokensIds: string[], numberOfItems = 30): string[] {
+  private getNextSequentialFromTokensIds(tokensIds: string[], numberOfItems = 10): string[] {
     const highestValue = Math.max(...tokensIds.map(Number));
     return Array.from({ length: numberOfItems }, (_, index) => highestValue + index + 1).map(String);
   }
@@ -119,6 +119,7 @@ export class TokensJobsVerifyMintService {
         const contract = await this.eRC721Provider.create(params.address, params.chainId);
         const baseUri = await contract.getBaseUri();
         await parallel(10, params.tokensIds, async (tokenId) => {
+          this.logger.verbose(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
           const uri = await contract.getTokenUri(tokenId);
           const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
           if (!tokenUri) {
@@ -138,6 +139,7 @@ export class TokensJobsVerifyMintService {
             );
             countTokensFound++;
           }
+          this.logger.verbose(`Save token ${params.address}/${params.chainId}/${tokenId}`);
         });
         return countTokensFound;
       },
