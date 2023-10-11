@@ -5,6 +5,8 @@ import { TerminusModule } from '@nestjs/terminus';
 import { makeGaugeProvider, PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { DatabaseModule } from 'database/database.module';
 import { QueueModule } from 'modules/queue/queue.module';
+import { BlockchainModule } from '../blockchain/blockchain.module';
+import { BlockchainHealthIndicator } from './blockchain.health';
 import { HealthController } from './health.controller';
 import { PrometheusOptionsService } from './prometheus-options.service';
 @Module({
@@ -18,6 +20,7 @@ import { PrometheusOptionsService } from './prometheus-options.service';
       inject: [],
       useClass: PrometheusOptionsService,
     }),
+    BlockchainModule,
   ],
   controllers: [HealthController],
   providers: [
@@ -26,6 +29,7 @@ import { PrometheusOptionsService } from './prometheus-options.service';
       help: 'Health status of the application',
       labelNames: ['type'],
     }),
+    BlockchainHealthIndicator,
   ],
 })
 export class HealthModule {}

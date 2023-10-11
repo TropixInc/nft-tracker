@@ -22,6 +22,7 @@ import { MigrationHealthIndicator } from 'database/migration.health';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import v8 from 'node:v8';
 import { LocalQueueEnum } from 'modules/queue/enums';
+import { BlockchainHealthIndicator } from './blockchain.health';
 
 const LOCAL_WEBHOOK_KEY = `${LocalQueueEnum.Webhook}_queue` as const;
 const LOCAL_TOKEN_JOB_KEY = `${LocalQueueEnum.TokenJob}_queue` as const;
@@ -31,6 +32,7 @@ interface Indicators {
   database: () => Promise<HealthIndicatorResult>;
   memory_heap: () => Promise<HealthIndicatorResult>;
   memory_rss_aloc: () => Promise<HealthIndicatorResult>;
+  blockchain: () => Promise<HealthIndicatorResult>;
   [LOCAL_WEBHOOK_KEY]: () => Promise<HealthIndicatorResult>;
   [LOCAL_TOKEN_JOB_KEY]: () => Promise<HealthIndicatorResult>;
 }
@@ -71,6 +73,7 @@ export class HealthController extends PrometheusController {
     private microservice: MicroserviceHealthIndicator,
     private migration: MigrationHealthIndicator,
     private queueHealthIndicator: QueueHealthIndicator,
+    private blockchainHealthIndicator: BlockchainHealthIndicator,
     @InjectMetric('app_health_checks') private readonly appHealthChecksGauges: Gauge<string>,
   ) {
     super();
@@ -116,6 +119,7 @@ export class HealthController extends PrometheusController {
       database: () => this.db.pingCheck('database', { timeout: 5000 }),
       memory_heap: () => this.memoryHealthIndicator.checkHeap('memory_heap', MAX_MEMORY_HEAP),
       memory_rss_aloc: () => this.memoryHealthIndicator.checkRSS('memory_rss_aloc', MAX_MEMORY_ALOC),
+      blockchain: () => this.blockchainHealthIndicator.isHealthy('blockchain'),
       [LOCAL_WEBHOOK_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.Webhook),
       [LOCAL_TOKEN_JOB_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.TokenJob),
     };
@@ -158,7 +162,6 @@ export class HealthController extends PrometheusController {
   @Cron(CronExpression.EVERY_10_SECONDS)
   async collectHealthCheckMetrics() {
     try {
-      this.logger.verbose('Collecting health check metrics');
       const check: HealthCheckResult = await this.wrapCheckIndicators(this.allIndicators());
 
       Object.entries(check.details).forEach(([key, value]) => {

@@ -31,12 +31,59 @@ export class EthereumService {
     return this.jsonRpcProvidersPool.get(chainId)!;
   }
 
+  public async getBlockchainCheckedProviders() {
+    const statusHttp = await this.checkAllJsonRpcProviders();
+    return { statusHttp };
+  }
+
+  private async checkAllJsonRpcProviders() {
+    const data = {
+      ready: true,
+      chains: [] as { name: ChainId; state: boolean; blockNumber: number }[],
+    };
+    const providers = this.getJsonRpcProviders();
+    await Promise.all(
+      providers.map(async ([chain, provider]) => {
+        const blockNumber: number = await provider.getBlockNumber().catch(() => {
+          return 0;
+        });
+
+        const isReady = blockNumber > 0;
+
+        data.chains.push({
+          name: chain,
+          state: isReady,
+          blockNumber,
+        });
+        data.ready = isReady ? data.ready : false;
+      }),
+    );
+
+    data.ready = data.chains.length ? data.ready : false;
+    return data;
+  }
+
+  private getJsonRpcProviders() {
+    if (this.supportedChainIds().length > 0) {
+      // Load all providers
+      this.supportedChainIds().forEach((chainId) => {
+        this.getJsonRpcProviderByChainId(chainId);
+      });
+    }
+
+    return Array.from(this.jsonRpcProvidersPool.entries());
+  }
+
+  private supportedChainIds(): ChainId[] {
+    return this.configService.get<AppConfig['chain_ids']>('chain_ids') as ChainId[];
+  }
+
   private getRPCUrl(chainId: number) {
     switch (chainId) {
       case ChainId.LOCALHOST:
         return `http://localhost:8545`;
       case ChainId.MOONBEAM:
-        return 'https://rpc.api.moonbeam.network';
+        return 'https://moonbeam.api.onfinality.io/public';
       case ChainId.MOONRIVER:
         return 'https://rpc.api.moonriver.moonbeam.network';
       case ChainId.MUMBAI:
