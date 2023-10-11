@@ -62,4 +62,12 @@ export class ContractService {
       return entity;
     });
   }
+
+  syncTotalSupply() {
+    return this.repository.query(`
+      UPDATE contracts c
+      SET
+        total_supply = (SELECT count(1) as total FROM tokens t WHERE t.address ilike c.address AND t.chain_id = c.chain_id )
+      WHERE c.deleted_at IS NULL`);
+  }
 }

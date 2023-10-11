@@ -1,5 +1,5 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { forwardRef, Inject, Logger } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { Job, Queue } from 'bull';
 import { LoggerContext } from 'common/decorators/logger-context.decorator';
@@ -11,6 +11,7 @@ import { TokensJobsVerifyMintService } from '../tokens-jobs-verify-mint.service'
 import { TokensJobsFetchOwnerAddressService } from '../tokens-jobs-fetch-owner-address.service';
 import { TokensJobsUploadAssetService } from '../tokens-jobs-upload-asset.service';
 import { TokensJobsRefreshTokenService } from '../tokens-jobs-refresh-token.service';
+import { ContractService } from 'src/modules/contracts/contract.service';
 
 @Processor(LocalQueueEnum.TokenJob)
 export class TokenJobProcessor
@@ -24,6 +25,7 @@ export class TokenJobProcessor
       | 'executeRefreshToken'
       | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
+      | 'syncTotalSupply'
     >
 {
   private logger = new Logger(TokenJobProcessor.name);
@@ -36,6 +38,8 @@ export class TokenJobProcessor
     private readonly fetchOwnerAddressService: TokensJobsFetchOwnerAddressService,
     private readonly uploadAssetService: TokensJobsUploadAssetService,
     private readonly refreshTokenService: TokensJobsRefreshTokenService,
+    @Inject(forwardRef(() => ContractService))
+    private readonly contractService: ContractService,
   ) {}
 
   @LoggerContext()
@@ -61,6 +65,10 @@ export class TokenJobProcessor
       {
         name: TokenJobJobs.CheckJobFrozen,
         cron: CronExpression.EVERY_MINUTE,
+      },
+      {
+        name: TokenJobJobs.SyncTotalSupply,
+        cron: CronExpression.EVERY_HOUR,
       },
     ];
     await Promise.all(
@@ -140,5 +148,11 @@ export class TokenJobProcessor
   @LoggerContext({ logError: true })
   async createFetchOwnerAddressJobsHandler() {
     await this.fetchOwnerAddressService.checkTokensOwnerAddressNotChangeForLongTime();
+  }
+
+  @Process({ name: TokenJobJobs.SyncTotalSupply })
+  @LoggerContext({ logError: true })
+  async syncTotalSupplyHandler() {
+    await this.contractService.syncTotalSupply();
   }
 }

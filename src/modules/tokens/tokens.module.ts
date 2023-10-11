@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { QueueModule } from 'modules/queue/queue.module';
 import { TokenEntity } from './entities/tokens.entity';
@@ -14,9 +14,15 @@ import { TokensJobsFetchOwnerAddressService } from './tokens-jobs-fetch-owner-ad
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokensJobsUploadAssetService } from './tokens-jobs-upload-asset.service';
 import { TokensJobsRefreshTokenService } from './tokens-jobs-refresh-token.service';
+import { ContractModule } from '../contracts/contract.module';
 
 @Module({
-  imports: [QueueModule, TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity]), BlockchainModule],
+  imports: [
+    QueueModule,
+    TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity]),
+    BlockchainModule,
+    forwardRef(() => ContractModule),
+  ],
   controllers: [TokensController],
   providers: [
     TokensService,

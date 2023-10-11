@@ -1,3 +1,4 @@
+import { sanitizeUri } from 'src/modules/blockchain/evm/utils';
 import { TokenEntity } from '../entities/tokens.entity';
 import { Nft } from '../interfaces';
 
@@ -23,7 +24,7 @@ export class NftsMapper {
       description: token.description,
       tokenUri: {
         raw: token.tokenUri,
-        gateway: token.tokenUri,
+        gateway: sanitizeUri(token.tokenUri),
       },
       media: [
         {

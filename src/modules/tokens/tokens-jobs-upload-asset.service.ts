@@ -99,11 +99,13 @@ export class TokensJobsUploadAssetService {
   async checkTokensWithoutMediaCache(): Promise<void> {
     const items = await this.tokenRepository.query(`SELECT tokens.image_raw_url 
               FROM tokens
-               LEFT OUTER JOIN tokens_jobs
+                  LEFT OUTER JOIN tokens_jobs
                                on tokens.image_raw_url::text ILIKE tokens_jobs.asset_uri AND
                                   tokens_jobs.type = 'upload_asset'
-                    WHERE tokens_jobs.id IS NULL
-                      AND (tokens.image_raw_url IS NOT NULL OR tokens.image_raw_url <> '')
+                  LEFT JOIN contracts c on tokens.chain_id = c.chain_id AND tokens.address ilike c.address
+                  WHERE tokens_jobs.id IS NULL
+                    AND (tokens.image_raw_url IS NOT NULL OR tokens.image_raw_url <> '')
+                    AND c.cache_media = true
               GROUP BY tokens.image_raw_url
               LIMIT 10`);
     for await (const item of items) {

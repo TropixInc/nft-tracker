@@ -2,6 +2,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Queue } from 'bull';
+import { isJSON, isURL } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
@@ -9,6 +10,7 @@ import { parallel } from 'radash';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { Optional } from 'src/common/interfaces';
 import { ILike, LessThan, Repository } from 'typeorm';
+import { sanitizeUri } from '../blockchain/evm/utils';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
@@ -167,22 +169,28 @@ export class TokensJobsFetchMetadataService {
     });
   }
 
-  private fetchMetadata(tokenUri: string): Promise<Record<string, unknown>> {
-    const axiosInstance = RequestHelpers.getInstance().getAxiosInstance();
-    return axiosInstance
-      .get(tokenUri)
-      .then((response) => response.data)
-      .catch((error) => {
-        this.logger.error(`Error fetching metadata from ${tokenUri}`, error);
-        return {};
-      });
+  private fetchMetadata(tokenUri: string): Promise<Record<string, unknown>> | null {
+    const uri = sanitizeUri(tokenUri);
+    if (isURL(uri)) {
+      const axiosInstance = RequestHelpers.getInstance().getAxiosInstance();
+      return axiosInstance
+        .get(uri)
+        .then((response) => response.data)
+        .catch((error) => {
+          this.logger.error(`Error fetching metadata from ${uri}`, error);
+          throw error;
+        });
+    } else if (isJSON(tokenUri)) {
+      return this.tryJson(tokenUri);
+    }
+    return null;
   }
 
   private async updateMetadataToken(params: {
     address: string;
     chainId: ChainId;
     tokenId: string;
-    payload: Record<string, unknown>;
+    payload?: Optional<Record<string, unknown>>;
   }) {
     const sanitizePayload = this.sanitizePayload(params.payload);
     const asset = sanitizePayload.imageRawUrl
@@ -209,7 +217,7 @@ export class TokensJobsFetchMetadataService {
     );
   }
 
-  private sanitizePayload(payload: Record<string, unknown>): {
+  private sanitizePayload(payload: Optional<Record<string, unknown>>): {
     name?: Optional<string>;
     description?: Optional<string>;
     externalUrl?: Optional<string>;
@@ -256,13 +264,17 @@ export class TokensJobsFetchMetadataService {
     }
 
     if (result.imageRawUrl) {
-      result.imageRawUrl = this.sanitizeUri(result.imageRawUrl);
+      result.imageRawUrl = sanitizeUri(result.imageRawUrl);
     }
 
     return result;
   }
 
-  sanitizeUri(uri: string): string {
-    return uri.replace(/^ipfs:\/\/ipfs\//, 'https://ipfs.io/ipfs/');
+  tryJson(json: string) {
+    try {
+      return JSON.parse(json);
+    } catch {
+      return null;
+    }
   }
 }
