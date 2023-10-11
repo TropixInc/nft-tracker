@@ -119,26 +119,34 @@ export class TokensJobsVerifyMintService {
         const contract = await this.eRC721Provider.create(params.address, params.chainId);
         const baseUri = await contract.getBaseUri();
         await parallel(10, params.tokensIds, async (tokenId) => {
-          this.logger.verbose(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
-          const uri = await contract.getTokenUri(tokenId);
-          const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
-          if (!tokenUri) {
-            this.logger.error(`TokenUri is not valid for token ${params.address}/${params.chainId}/${tokenId}`);
-            await Promise.resolve();
-          } else {
-            const ownerAddress = await contract.getOwnerOf(tokenId);
-            await this.upsertToken(
-              {
-                address: params.address,
-                chainId: params.chainId,
-                tokenId,
-                tokenUri,
-                ownerAddress,
-              },
-              { queryRunnerArg: queryRunner },
+          try {
+            this.logger.verbose(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
+            const uri = await contract.getTokenUri(tokenId);
+            const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
+            if (!tokenUri) {
+              this.logger.error(`TokenUri is not valid for token ${params.address}/${params.chainId}/${tokenId}`);
+              await Promise.resolve();
+            } else {
+              const ownerAddress = await contract.getOwnerOf(tokenId);
+              await this.upsertToken(
+                {
+                  address: params.address,
+                  chainId: params.chainId,
+                  tokenId,
+                  tokenUri,
+                  ownerAddress,
+                },
+                { queryRunnerArg: queryRunner },
+              );
+              countTokensFound++;
+            }
+          } catch (error) {
+            this.logger.error(
+              `Error when get information of token ${params.address}/${params.chainId}/${tokenId} with error ${error.mensage}`,
+              error.stack,
             );
-            countTokensFound++;
           }
+
           this.logger.verbose(`Save token ${params.address}/${params.chainId}/${tokenId}`);
         });
         return countTokensFound;

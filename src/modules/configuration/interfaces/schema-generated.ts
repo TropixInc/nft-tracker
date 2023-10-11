@@ -5,11 +5,20 @@ export type API_KEYS = {
   label: string;
   [k: string]: unknown;
 }[];
+// AUTO-GENERATED;
 
-export type ConfigSchema = API_KEYS;
+export type EVM = {
+  chainId: number;
+  rpc: string;
+  wss: string;
+  [k: string]: unknown;
+}[];
 
-export type ConfigKeys = 'API_KEYS';
+export type ConfigSchema = API_KEYS | EVM;
+
+export type ConfigKeys = 'API_KEYS' | 'EVM';
 
 export interface ConfigStorage {
   API_KEYS: API_KEYS;
+  EVM: EVM;
 }

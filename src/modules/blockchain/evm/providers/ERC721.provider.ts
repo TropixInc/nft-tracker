@@ -6,6 +6,7 @@ import { isString } from 'lodash';
 import { ChainId } from 'src/common/enums';
 import { Optional } from 'src/common/interfaces';
 import { AppConfig } from 'src/config/app.config';
+import { ConfigurationService } from 'src/modules/configuration/configuration.service';
 import { EthereumService } from '../ethereum.service';
 import { ERC721 } from '../interfaces/ERC721';
 import erc721Abi from '../static/erc721.abi.json';
@@ -13,23 +14,35 @@ import { isIPFSHash } from '../utils';
 
 @Injectable()
 export class ERC721Provider extends EthereumService {
-  constructor(protected readonly configService: ConfigService<AppConfig>) {
-    super(configService);
+  constructor(
+    protected readonly configService: ConfigService<AppConfig>,
+    protected readonly configurationService: ConfigurationService,
+  ) {
+    super(configService, configurationService);
   }
 
   async create<ContractInterface extends ERC721>(address: string, chainId: ChainId) {
-    const contract = this.getContractAt<ContractInterface>(address, chainId, erc721Abi);
+    const contract = await this.getContractAt<ContractInterface>(address, chainId, erc721Abi);
 
-    return new ERC721Contract<ContractInterface>(contract, this.configService);
+    return new ERC721Contract<ContractInterface>(
+      contract,
+      address,
+      chainId,
+      this.configService,
+      this.configurationService,
+    );
   }
 }
 
 export class ERC721Contract<T extends ERC721> extends EthereumService {
   constructor(
     private readonly contract: T,
+    private readonly address: string,
+    private readonly chainId: ChainId,
     protected readonly configService: ConfigService<AppConfig>,
+    protected readonly configurationService: ConfigurationService,
   ) {
-    super(configService);
+    super(configService, configurationService);
   }
 
   async name(): Promise<string> {
@@ -60,6 +73,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
 
   async getOwnerOf(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
+      this.logger.verbose(`Get ownerOf from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.ownerOf(tokenId);
     } catch (error) {
       return null;
@@ -68,15 +82,16 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
 
   async getTokenUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
+      this.logger.verbose(`Get tokenId from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
-      console.log(error);
       return await this.getUri(tokenId);
     }
   }
 
   async getUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
+      this.logger.verbose(`Get uri from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.uri(tokenId);
     } catch (error) {
       return null;
@@ -100,6 +115,7 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
   }
 
   formatTokenUri(tokenId: string, baseUri?: Optional<string>, tokenUri?: Optional<string>): string {
+    this.logger.verbose(`Format uri from ${this.address}/${this.chainId}/${tokenId}`);
     if (!tokenUri && !baseUri) {
       return '';
     }

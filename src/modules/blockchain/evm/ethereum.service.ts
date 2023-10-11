@@ -4,27 +4,31 @@ import { ChainId } from 'src/common/enums';
 import { AppConfig } from 'src/config/app.config';
 import { ethers, JsonRpcProvider } from 'ethers';
 import { ChainIsNotSupportedException } from '../exceptions';
+import { ConfigurationService } from 'src/modules/configuration/configuration.service';
 
 @Injectable()
 export class EthereumService {
   logger = new Logger(EthereumService.name);
 
   private jsonRpcProvidersPool = new Map<ChainId, JsonRpcProvider>();
-  constructor(protected readonly configService: ConfigService<AppConfig>) {}
+  constructor(
+    protected readonly configService: ConfigService<AppConfig>,
+    protected readonly configurationService: ConfigurationService,
+  ) {}
 
-  public getContractAt<T>(address: string, chainId: ChainId, abi: string[]): T {
-    return new ethers.Contract(address, abi, this.getJsonRpcProviderByChainId(chainId)) as T;
+  public async getContractAt<T>(address: string, chainId: ChainId, abi: string[]): Promise<T> {
+    return new ethers.Contract(address, abi, await this.getJsonRpcProviderByChainId(chainId)) as T;
   }
 
-  public getBlockNumber(chainId: ChainId) {
-    const provider = this.getJsonRpcProviderByChainId(chainId);
+  public async getBlockNumber(chainId: ChainId) {
+    const provider = await this.getJsonRpcProviderByChainId(chainId);
     return provider.getBlockNumber();
   }
 
-  public getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean) {
+  public async getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean) {
     if (force || !this.jsonRpcProvidersPool.has(chainId)) {
       this.jsonRpcProvidersPool.get(chainId)?.removeAllListeners();
-      const provider = new JsonRpcProvider(this.getRPCUrl(chainId));
+      const provider = new JsonRpcProvider(await this.getRPCUrlOnConfigurationOrDefault(chainId));
       this.jsonRpcProvidersPool.set(chainId, provider);
       return provider;
     }
@@ -41,7 +45,7 @@ export class EthereumService {
       ready: true,
       chains: [] as { name: ChainId; state: boolean; blockNumber: number }[],
     };
-    const providers = this.getJsonRpcProviders();
+    const providers = await this.getJsonRpcProviders();
     await Promise.all(
       providers.map(async ([chain, provider]) => {
         const blockNumber: number = await provider.getBlockNumber().catch(() => {
@@ -63,12 +67,14 @@ export class EthereumService {
     return data;
   }
 
-  private getJsonRpcProviders() {
+  private async getJsonRpcProviders() {
     if (this.supportedChainIds().length > 0) {
       // Load all providers
-      this.supportedChainIds().forEach((chainId) => {
-        this.getJsonRpcProviderByChainId(chainId);
-      });
+      await Promise.all(
+        this.supportedChainIds().map(async (chainId) => {
+          await this.getJsonRpcProviderByChainId(chainId);
+        }),
+      );
     }
 
     return Array.from(this.jsonRpcProvidersPool.entries());
@@ -76,6 +82,11 @@ export class EthereumService {
 
   private supportedChainIds(): ChainId[] {
     return this.configService.get<AppConfig['chain_ids']>('chain_ids') as ChainId[];
+  }
+
+  private async getRPCUrlOnConfigurationOrDefault(chainId: number) {
+    const evm = await this.configurationService.get('EVM');
+    return evm?.find((item) => item.chainId === chainId)?.rpc || this.getRPCUrl(chainId);
   }
 
   private getRPCUrl(chainId: number) {
