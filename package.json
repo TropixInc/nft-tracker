@@ -1,6 +1,6 @@
 {
   "name": "nft-tracker",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "author": "Gislainy Crisostomo <gislainycrisostomo@gmail.com>",
   "private": false,
@@ -78,7 +78,7 @@
     "class-validator-multi-lang": "^0.130.201",
     "date-fns": "^2.30.0",
     "dotenv": "^16.3.1",
-    "ethers": "^6.7.1",
+    "ethers": "^6.8.0",
     "fast-glob": "3.3.1",
     "genson-js": "0.0.8",
     "handlebars": "^4.7.8",
