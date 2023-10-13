@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.5](https://github.com/TropixInc/nft-tracker/compare/v0.0.4...v0.0.5) (2023-10-13)
+
+
+### Features
+
+* **verify mint:** adding resync of mint check after one hour from last check ([094505f](https://github.com/TropixInc/nft-tracker/commit/094505f31717b9e1c38fee4b837b59bfa56cd91f))
+
 ### [0.0.4](https://github.com/TropixInc/nft-tracker/compare/v0.0.3...v0.0.4) (2023-10-13)
 
 
