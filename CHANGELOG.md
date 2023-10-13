@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.4](https://github.com/TropixInc/nft-tracker/compare/v0.0.3...v0.0.4) (2023-10-13)
+
+
+### Features
+
+* updating ethers ([1eaba8c](https://github.com/TropixInc/nft-tracker/commit/1eaba8c3da113847d040c00d9fda5caf6189060c))
+
 ### [0.0.3](https://github.com/TropixInc/nft-tracker/compare/v0.0.2...v0.0.3) (2023-10-11)
 
 
