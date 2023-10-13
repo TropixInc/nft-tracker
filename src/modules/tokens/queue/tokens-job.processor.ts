@@ -26,6 +26,7 @@ export class TokenJobProcessor
       | 'createFetchJobs'
       | 'createFetchOwnerAddressJobs'
       | 'syncTotalSupply'
+      | 'resyncVerifyMint'
     >
 {
   private logger = new Logger(TokenJobProcessor.name);
@@ -68,6 +69,10 @@ export class TokenJobProcessor
       },
       {
         name: TokenJobJobs.SyncTotalSupply,
+        cron: CronExpression.EVERY_HOUR,
+      },
+      {
+        name: TokenJobJobs.ResyncVerifyMint,
         cron: CronExpression.EVERY_HOUR,
       },
     ];
@@ -154,5 +159,11 @@ export class TokenJobProcessor
   @LoggerContext({ logError: true })
   async syncTotalSupplyHandler() {
     await this.contractService.syncTotalSupply();
+  }
+
+  @Process({ name: TokenJobJobs.ResyncVerifyMint })
+  @LoggerContext({ logError: true })
+  async resyncVerifyMintHandler() {
+    await this.verifyMintService.resyncVerifyMint();
   }
 }

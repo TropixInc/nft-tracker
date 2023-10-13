@@ -5,7 +5,7 @@ import { parallel } from 'radash';
 import { runTransaction } from 'common/helpers/transaction.helper';
 import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
 import { LessThan, QueryRunner, Repository } from 'typeorm';
-import { subMinutes } from 'date-fns';
+import { differenceInMinutes, subMinutes } from 'date-fns';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
@@ -151,6 +151,41 @@ export class TokensJobsVerifyMintService {
       },
       opts?.queryRunnerArg,
     );
+  }
+
+  async resyncVerifyMint() {
+    const items: { address: string; chain_id: ChainId; last_verify_at; token_id }[] = await this.tokenJobRepository
+      .query(`SELECT address,
+                    chain_id,
+                    (SELECT tokens_jobs.created_at
+                      FROM tokens_jobs
+                      WHERE type = 'verify_mint'
+                        AND contracts.address = tokens_jobs.address
+                        AND contracts.chain_id = tokens_jobs.chain_id
+                      ORDER BY created_at DESC
+                      LIMIT 1) as last_verify_at,
+                    (SELECT token_id
+                      FROM tokens
+                      WHERE contracts.address = tokens.address
+                        AND contracts.chain_id = tokens.chain_id
+                      ORDER BY token_id DESC
+                      LIMIT 1) as token_id
+              FROM contracts
+              WHERE contracts.deleted_at IS NULL`);
+
+    const contracts = items.filter(
+      (contract) => differenceInMinutes(new Date(contract.last_verify_at), new Date()) >= 60, // one hour
+    );
+    for await (const contract of contracts) {
+      await this.tokenJobRepository.save({
+        address: contract.address,
+        chainId: contract.chain_id,
+        type: TokenJobType.VerifyMint,
+        status: TokenJobStatus.Created,
+        executeAt: new Date(),
+        tokensIds: this.getNextSequentialFromTokensIds([contract.token_id]),
+      });
+    }
   }
 
   private upsertToken(

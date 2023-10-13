@@ -22,4 +22,5 @@ export enum TokenJobJobs {
   CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',
   ExecuteFetchOwnerAddressByJob = 'executeFetchOwnerAddressByJob',
   SyncTotalSupply = 'syncTotalSupply',
+  ResyncVerifyMint = 'resyncVerifyMint',
 }
