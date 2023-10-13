@@ -28,7 +28,8 @@ export class EthereumService {
   public async getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean) {
     if (force || !this.jsonRpcProvidersPool.has(chainId)) {
       this.jsonRpcProvidersPool.get(chainId)?.removeAllListeners();
-      const provider = new JsonRpcProvider(await this.getRPCUrlOnConfigurationOrDefault(chainId));
+      const uri = await this.getRPCUrlOnConfigurationOrDefault(chainId);
+      const provider = new JsonRpcProvider(uri);
       this.jsonRpcProvidersPool.set(chainId, provider);
       return provider;
     }

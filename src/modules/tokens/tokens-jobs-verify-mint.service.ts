@@ -20,7 +20,6 @@ export class TokensJobsVerifyMintService {
     private tokenJobRepository: Repository<TokenJobEntity>,
     private eRC721Provider: ERC721Provider,
   ) {}
-
   async execute(): Promise<void> {
     return runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
       const job = await this.getNextJob(queryRunner);
@@ -120,7 +119,7 @@ export class TokensJobsVerifyMintService {
         const baseUri = await contract.getBaseUri();
         await parallel(10, params.tokensIds, async (tokenId) => {
           try {
-            this.logger.verbose(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
+            this.logger.debug(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
             const uri = await contract.getTokenUri(tokenId);
             const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
             if (!tokenUri) {
@@ -141,13 +140,12 @@ export class TokensJobsVerifyMintService {
               countTokensFound++;
             }
           } catch (error) {
-            this.logger.error(
-              `Error when get information of token ${params.address}/${params.chainId}/${tokenId} with error ${error.mensage}`,
-              error.stack,
-            );
+            this.logger.error(`Error when get information of token ${params.address}/${params.chainId}/${tokenId}`);
+            this.logger.error(error);
+            throw error;
           }
 
-          this.logger.verbose(`Save token ${params.address}/${params.chainId}/${tokenId}`);
+          this.logger.debug(`Save token ${params.address}/${params.chainId}/${tokenId}`);
         });
         return countTokensFound;
       },

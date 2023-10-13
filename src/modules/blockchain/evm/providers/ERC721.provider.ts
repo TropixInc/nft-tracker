@@ -82,16 +82,17 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
 
   async getTokenUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
-      this.logger.verbose(`Get tokenId from ${this.address}/${this.chainId}/${tokenId}`);
+      this.logger.debug(`Get tokenId from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
+      console.error(error);
       return await this.getUri(tokenId);
     }
   }
 
   async getUri(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
-      this.logger.verbose(`Get uri from ${this.address}/${this.chainId}/${tokenId}`);
+      this.logger.debug(`Get uri from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.uri(tokenId);
     } catch (error) {
       return null;
@@ -115,7 +116,9 @@ export class ERC721Contract<T extends ERC721> extends EthereumService {
   }
 
   formatTokenUri(tokenId: string, baseUri?: Optional<string>, tokenUri?: Optional<string>): string {
-    this.logger.verbose(`Format uri from ${this.address}/${this.chainId}/${tokenId}`);
+    this.logger.verbose(
+      `Format uri from ${this.address}/${this.chainId}/${tokenId} from baseUri=${baseUri} AND tokenUri=${tokenUri}`,
+    );
     if (!tokenUri && !baseUri) {
       return '';
     }
