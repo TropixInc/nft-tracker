@@ -8,7 +8,6 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 ARG GITHUB_TOKEN
 ENV GITHUB_TOKEN=${GITHUB_TOKEN}
-
 # Set working directory
 WORKDIR /app
 
@@ -65,3 +64,4 @@ COPY --from=builder --chown=node:node ./app/node_modules ./node_modules
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD ["npm", "run", "start:prod"]
+
