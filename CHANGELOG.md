@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/TropixInc/nft-tracker/compare/v0.0.5...v0.0.6) (2023-10-16)
+
+
+### Features
+
+* **token:** adding swagger response ([06974a0](https://github.com/TropixInc/nft-tracker/commit/06974a03efd18734a7b73b3e5fd2e5d52b058f74))
+
 ### [0.0.5](https://github.com/TropixInc/nft-tracker/compare/v0.0.4...v0.0.5) (2023-10-13)
 
 
