@@ -1,5 +1,10 @@
 # NFT Tracker
 
+This application streamlines access to ERC-721 smart contracts' media and metadata directly from frontend applications, eliminating the need for third-party SaaS providers like Alchemy and Infura.
+
+By adding a smart contract to the list of monitored contracts, this application retrieves and caches essential information, including metadata, token ownership data, and, optionally, the caching and transformation of video and image files. 
+
+In our upcoming release, we will also introduce a feature that enables the fetching and caching of individual NFT transaction history for the monitored smart contracts, further enhancing the versatility and utility of this application.
 
 # Setup
 
