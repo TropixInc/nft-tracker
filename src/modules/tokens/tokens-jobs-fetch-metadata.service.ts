@@ -1,12 +1,14 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AxiosError } from 'axios';
 import { Queue } from 'bull';
 import { isJSON, isURL } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
 import { parallel } from 'radash';
+import { TooManyRequestsExceptionDto } from 'src/common/dtos/http-exception.dto';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { Optional } from 'src/common/interfaces';
 import { ILike, LessThan, Repository } from 'typeorm';
@@ -65,10 +67,20 @@ export class TokensJobsFetchMetadataService {
       this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
     } catch (error) {
       this.logger.error(error);
-      await this.tokenJobRepository.update(job.id, {
-        status: TokenJobStatus.Failed,
-        failedAt: new Date(),
-      });
+      if (error instanceof TooManyRequestsExceptionDto) {
+        const attempts = job.attempts++;
+        await this.tokenJobRepository.update(job.id, {
+          status: TokenJobStatus.Created,
+          executeAt: this.calculateExponentialBackoffTime(attempts, 60 * 1000),
+          attempts,
+        });
+      } else {
+        await this.tokenJobRepository.update(job.id, {
+          status: TokenJobStatus.Failed,
+          failedAt: new Date(),
+          attempts: 1,
+        });
+      }
       throw error;
     }
   }
@@ -176,8 +188,12 @@ export class TokensJobsFetchMetadataService {
       return axiosInstance
         .get(uri)
         .then((response) => response.data)
-        .catch((error) => {
+        .catch((error: AxiosError) => {
           this.logger.error(`Error fetching metadata from ${uri}`, error);
+
+          if (error.status === HttpStatus.TOO_MANY_REQUESTS) {
+            throw new TooManyRequestsExceptionDto();
+          }
           throw error;
         });
     } else if (isJSON(tokenUri)) {
@@ -276,5 +292,13 @@ export class TokensJobsFetchMetadataService {
     } catch {
       return null;
     }
+  }
+
+  private calculateExponentialBackoffTime(currentAttempt: number, baseDelay: number = 1000): Date {
+    if (currentAttempt < 1) {
+      return new Date();
+    }
+    const delay = baseDelay * Math.pow(2, currentAttempt - 1);
+    return new Date(Date.now() + delay);
   }
 }
