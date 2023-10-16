@@ -66,13 +66,13 @@ export class TokensJobsFetchMetadataService {
       });
       this.logger.verbose(`Job ${job.tokensUris[0]} completed`);
     } catch (error) {
-      this.logger.error(error);
       if (error instanceof TooManyRequestsExceptionDto) {
-        const attempts = job.attempts++;
+        const attempts = job.attempts + 1;
         await this.tokenJobRepository.update(job.id, {
           status: TokenJobStatus.Created,
           executeAt: this.calculateExponentialBackoffTime(attempts, 60 * 1000),
           attempts,
+          failedAt: new Date(),
         });
       } else {
         await this.tokenJobRepository.update(job.id, {
@@ -81,6 +81,7 @@ export class TokensJobsFetchMetadataService {
           attempts: 1,
         });
       }
+      this.logger.error(error);
       throw error;
     }
   }
@@ -189,12 +190,11 @@ export class TokensJobsFetchMetadataService {
         .get(uri)
         .then((response) => response.data)
         .catch((error: AxiosError) => {
-          this.logger.error(`Error fetching metadata from ${uri}`, error);
-
-          if (error.status === HttpStatus.TOO_MANY_REQUESTS) {
+          this.logger.error(`Error fetching metadata from ${uri}`, error.response);
+          if (error?.response?.status === HttpStatus.TOO_MANY_REQUESTS) {
             throw new TooManyRequestsExceptionDto();
           }
-          throw error;
+          throw this.handleAxiosError(error);
         });
     } else if (isJSON(tokenUri)) {
       return this.tryJson(tokenUri);
@@ -301,4 +301,18 @@ export class TokensJobsFetchMetadataService {
     const delay = baseDelay * Math.pow(2, currentAttempt - 1);
     return new Date(Date.now() + delay);
   }
+
+  private handleAxiosError = (error: Error, fallbackMessage?: string): Error => {
+    const axiosError = error as AxiosError<any>;
+
+    if (axiosError.isAxiosError) {
+      const msg =
+        `${axiosError.response?.data?.message || axiosError.message || fallbackMessage || 'Unknown error'}` +
+        ' by ' +
+        axiosError.request?.url;
+
+      return new Error(msg);
+    }
+    return error;
+  };
 }
