@@ -3,7 +3,7 @@ import { IsDefined, IsEnum, IsNumber, IsOptional, IsString, Max, MaxLength, Min 
 import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { OrderByEnum } from '../enums/orderBy.enum';
-import { IPaginationMeta, IPaginationLinks } from 'nestjs-typeorm-paginate';
+import { IPaginationMeta } from 'nestjs-typeorm-paginate';
 import { filterVoid } from 'common/helpers/object.helper';
 
 export class PaginationDto {
@@ -66,26 +66,9 @@ export class PaginationMetaDto implements IPaginationMeta {
   currentPage: number;
 }
 
-export class PaginationLinksDto implements IPaginationLinks {
-  @ApiPropertyOptional({ type: 'string', example: 'http://example.com?page=1' })
-  first?: string;
-
-  @ApiPropertyOptional({ type: 'string', example: 'http://example.com?page=1' })
-  prev?: string;
-
-  @ApiPropertyOptional({ type: 'string', example: 'http://example.com?page=2' })
-  next?: string;
-
-  @ApiPropertyOptional({ type: 'string', example: 'http://example.com?page=3' })
-  last?: string;
-}
-
-@ApiExtraModels(PaginationMetaDto, PaginationLinksDto)
+@ApiExtraModels(PaginationMetaDto)
 export class PaginationBase {
   @ApiProperty({ type: PaginationMetaDto })
   @IsDefined({ each: true })
   meta: IPaginationMeta;
-
-  @ApiPropertyOptional({ type: PaginationLinksDto })
-  links?: IPaginationLinks | undefined;
 }

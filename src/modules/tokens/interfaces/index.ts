@@ -27,32 +27,41 @@ export interface TokenJob {
   type: TokenJobType;
 }
 
+export interface NftContract {
+  address: string;
+}
+
+export interface NftContractMetadata {
+  name?: Optional<string>;
+  symbol?: Optional<string>;
+  totalSupply?: Optional<string>;
+  tokenType?: Optional<string>;
+}
+
+export interface NftId {
+  tokenId: string;
+  tokenMetadata: {
+    tokenType: string;
+  };
+}
+
+export interface NftTokenUri {
+  raw: string;
+  gateway: string;
+}
+
+export interface NftMedia {
+  raw?: Optional<string>;
+  gateway?: Optional<string>;
+}
 export interface Nft {
-  contract: {
-    address: string;
-  };
-  contractMetadata: {
-    name?: Optional<string>;
-    symbol?: Optional<string>;
-    totalSupply?: Optional<string>;
-    tokenType?: Optional<string>;
-  };
-  id: {
-    tokenId: string;
-    tokenMetadata: {
-      tokenType: string;
-    };
-  };
+  contract: NftContract;
+  contractMetadata: NftContractMetadata;
+  id: NftId;
   title?: Optional<string>;
   description?: Optional<string>;
-  tokenUri: {
-    raw: string;
-    gateway: string;
-  };
-  media: {
-    raw?: Optional<string>;
-    gateway?: Optional<string>;
-  }[];
+  tokenUri: NftTokenUri;
+  media: NftMedia[];
   metadata?: Optional<Record<string, unknown>>;
 }
 
