@@ -33,6 +33,7 @@ export class TokensJobsService {
       type: params.type,
       executeAt: params.executeAt ?? new Date(),
       status: TokenJobStatus.Created,
+      attempts: 0,
     });
   }
 
