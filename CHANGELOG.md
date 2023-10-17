@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.7](https://github.com/TropixInc/nft-tracker/compare/v0.0.6...v0.0.7) (2023-10-17)
+
+
+### Features
+
+* **fetch metadata:** adding backoff when error is too many request ([#17](https://github.com/TropixInc/nft-tracker/issues/17)) ([a7a85c1](https://github.com/TropixInc/nft-tracker/commit/a7a85c1a23f33a5f51a512e733de726eae30fcb4))
+
 ### [0.0.6](https://github.com/TropixInc/nft-tracker/compare/v0.0.5...v0.0.6) (2023-10-16)
 
 
