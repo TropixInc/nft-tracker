@@ -46,6 +46,9 @@ export class TokenJobEntity extends BaseEntity implements TokenJob {
   @Index()
   @Column({ nullable: false, type: 'enum', enum: TokenJobType })
   type: TokenJobType;
+
+  @Column({ nullable: false, default: 0, type: 'integer' })
+  attempts: number;
 }
 
 export type TokenJobModel = Omit<TokenJobEntity, 'deletedAt'> & BaseEntity;
