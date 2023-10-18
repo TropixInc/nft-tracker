@@ -7,13 +7,13 @@ import { ChainId } from 'src/common/enums';
 import { Optional } from 'src/common/interfaces';
 import { AppConfig } from 'src/config/app.config';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
-import { EthereumService } from '../ethereum.service';
+import { EvmService } from '../evm.service';
 import { ERC721 } from '../interfaces/ERC721';
 import erc721Abi from '../static/erc721.abi.json';
 import { isIPFSHash } from '../utils';
 
 @Injectable()
-export class ERC721Provider extends EthereumService {
+export class ERC721Provider extends EvmService {
   constructor(
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
@@ -34,7 +34,7 @@ export class ERC721Provider extends EthereumService {
   }
 }
 
-export class ERC721Contract<T extends ERC721> extends EthereumService {
+export class ERC721Contract<T extends ERC721> extends EvmService {
   constructor(
     private readonly contract: T,
     private readonly address: string,

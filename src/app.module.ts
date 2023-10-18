@@ -27,9 +27,9 @@ import { UUIDHelper } from 'common/helpers/uuid.helper';
 import { WebhookModule } from 'modules/webhook/webhook.module';
 import { ApplicationEnvEnum } from 'common/enums';
 import { ContractModule } from './modules/contracts/contract.module';
-import { BlockchainModule } from './modules/blockchain/blockchain.module';
 import { TokensModule } from './modules/tokens/tokens.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { EvmModule } from './modules/blockchain/evm/evm.module';
 
 @Module({
   imports: [
@@ -109,7 +109,7 @@ import { AuthModule } from './modules/auth/auth.module';
     DatabaseModule,
     WebhookModule,
     ContractModule,
-    BlockchainModule,
+    EvmModule.forRoot(),
     TokensModule,
     AuthModule,
   ],

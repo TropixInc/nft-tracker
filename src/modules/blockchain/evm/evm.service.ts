@@ -2,15 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChainId } from 'src/common/enums';
 import { AppConfig } from 'src/config/app.config';
-import { ethers, JsonRpcProvider } from 'ethers';
+import { ethers, JsonRpcProvider, WebSocketProvider } from 'ethers';
 import { ChainIsNotSupportedException } from '../exceptions';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
+import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
+import { Optional } from 'src/common/interfaces';
 
 @Injectable()
-export class EthereumService {
-  logger = new Logger(EthereumService.name);
+export class EvmService {
+  logger = new Logger(EvmService.name);
 
   private jsonRpcProvidersPool = new Map<ChainId, JsonRpcProvider>();
+  private webSocketProvidersPool = new Map<ChainId, WebSocketProvider>();
   constructor(
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
@@ -25,6 +28,7 @@ export class EthereumService {
     return provider.getBlockNumber();
   }
 
+  @LoggerContext({ logError: true })
   public async getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean) {
     if (force || !this.jsonRpcProvidersPool.has(chainId)) {
       this.jsonRpcProvidersPool.get(chainId)?.removeAllListeners();
@@ -34,6 +38,26 @@ export class EthereumService {
       return provider;
     }
     return this.jsonRpcProvidersPool.get(chainId)!;
+  }
+
+  @LoggerContext({ logError: true })
+  public async getWebSocketProviderByChainId(chainId: ChainId, force?: boolean): Promise<Optional<WebSocketProvider>> {
+    const exists = this.webSocketProvidersPool.has(chainId);
+    if (!force && exists) {
+      return this.webSocketProvidersPool.get(chainId)!;
+    }
+
+    if (force && exists) {
+      this.webSocketProvidersPool.get(chainId)?.removeAllListeners();
+      await this.webSocketProvidersPool.get(chainId)?.destroy();
+    }
+    const uri = await this.getWssUrlOnConfigurationOrDefault(chainId);
+    if (!uri) return null;
+    const provider = new WebSocketProvider(uri, chainId);
+    await provider.ready;
+
+    this.webSocketProvidersPool.set(chainId, provider);
+    return provider;
   }
 
   public async getBlockchainCheckedProviders() {
@@ -81,8 +105,37 @@ export class EthereumService {
     return Array.from(this.jsonRpcProvidersPool.entries());
   }
 
-  private supportedChainIds(): ChainId[] {
+  public supportedChainIds(): ChainId[] {
     return this.configService.get<AppConfig['chain_ids']>('chain_ids') as ChainId[];
+  }
+
+  public async getMinimumTransactionConfirmation(chainId: ChainId): Promise<number> {
+    const evm = await this.configurationService.get('EVM');
+    return evm?.find((item) => item.chainId === chainId)?.confirmation || 12;
+  }
+
+  private async getWssUrlOnConfigurationOrDefault(chainId: number): Promise<Optional<string>> {
+    const evm = await this.configurationService.get('EVM');
+    return evm?.find((item) => item.chainId === chainId)?.wss || this.getWssUrl(chainId);
+  }
+
+  private getWssUrl(chainId: number): Optional<string> {
+    switch (chainId) {
+      case ChainId.LOCALHOST:
+        return `wss://localhost:8545`;
+      case ChainId.MOONBEAM:
+        return 'wss://moonbeam.api.onfinality.io/public-ws';
+      case ChainId.MOONRIVER:
+        return 'wss://moonriver.api.onfinality.io/public-ws';
+      case ChainId.MUMBAI:
+        return '';
+      case ChainId.POLYGON:
+        return 'wss://polygon.api.onfinality.io/public-ws';
+      case ChainId.MAINNET:
+        return 'wss://ethereum.publicnode.com';
+      default:
+        throw new ChainIsNotSupportedException(chainId);
+    }
   }
 
   private async getRPCUrlOnConfigurationOrDefault(chainId: number) {

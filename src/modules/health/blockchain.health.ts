@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
-import { EthereumService } from '../blockchain/evm/ethereum.service';
+import { EvmService } from '../blockchain/evm/evm.service';
 @Injectable()
 export class BlockchainHealthIndicator extends HealthIndicator {
-  constructor(private readonly ethereumService: EthereumService) {
+  constructor(private readonly ethereumService: EvmService) {
     super();
   }
 

@@ -2,9 +2,9 @@ name: Create Release Branch
 
 on:
   workflow_dispatch:
-  schedule:
-    # Every friday at midnight
-    - cron: "0 23 * * FRI"
+  # schedule:
+  #   # Every friday at midnight
+  #   - cron: "0 23 * * FRI"
 
 jobs:
   scheduled-job:
