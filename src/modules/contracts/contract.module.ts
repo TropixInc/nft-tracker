@@ -11,7 +11,7 @@ import { EvmModule } from '../blockchain/evm/evm.module';
   imports: [
     QueueModule,
     TypeOrmModule.forFeature([ContractEntity]),
-    EvmModule.forRoot(),
+    forwardRef(() => EvmModule.forRoot()),
     forwardRef(() => TokensModule),
   ],
   controllers: [ContractController],

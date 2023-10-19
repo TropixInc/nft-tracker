@@ -29,7 +29,7 @@ export class EvmService {
   }
 
   @LoggerContext({ logError: true })
-  public async getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean) {
+  public async getJsonRpcProviderByChainId(chainId: ChainId, force?: boolean): Promise<JsonRpcProvider> {
     if (force || !this.jsonRpcProvidersPool.has(chainId)) {
       this.jsonRpcProvidersPool.get(chainId)?.removeAllListeners();
       const uri = await this.getRPCUrlOnConfigurationOrDefault(chainId);
@@ -107,6 +107,10 @@ export class EvmService {
 
   public supportedChainIds(): ChainId[] {
     return this.configService.get<AppConfig['chain_ids']>('chain_ids') as ChainId[];
+  }
+
+  public supportChainId(chainId: ChainId): boolean {
+    return this.supportedChainIds().includes(chainId);
   }
 
   public async getMinimumTransactionConfirmation(chainId: ChainId): Promise<number> {

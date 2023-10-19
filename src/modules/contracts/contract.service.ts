@@ -2,7 +2,7 @@ import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { runTransaction } from 'src/common/helpers/transaction.helper';
 import { DatabaseFunctionOptions } from 'src/common/interfaces';
-import { ILike, Repository } from 'typeorm';
+import { ILike, Repository, SelectQueryBuilder } from 'typeorm';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { TokenJobType } from '../tokens/enums';
 import { TokensJobsService } from '../tokens/tokens-jobs.service';
@@ -69,5 +69,17 @@ export class ContractService {
       SET
         total_supply = (SELECT count(1) as total FROM tokens t WHERE t.address ilike c.address AND t.chain_id = c.chain_id )
       WHERE c.deleted_at IS NULL`);
+  }
+
+  async getAllContracts(qb: true): Promise<SelectQueryBuilder<ContractEntity>>;
+  async getAllContracts(qb: false): Promise<ContractEntity[]>;
+  async getAllContracts(qb: boolean): Promise<SelectQueryBuilder<ContractEntity> | ContractEntity[]> {
+    const queryBuilder = this.repository
+      .createQueryBuilder('contracts')
+      .select(['contracts.address', 'contracts.chainId']);
+    if (qb) {
+      return queryBuilder;
+    }
+    return queryBuilder.getMany();
   }
 }
