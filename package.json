@@ -44,6 +44,7 @@
     "infra:gen": "npx zx scripts/generate-env-change.mjs"
   },
   "dependencies": {
+    "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/constants": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/web": "^5.7.1",

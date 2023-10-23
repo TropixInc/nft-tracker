@@ -8,10 +8,13 @@ import { isWatcher } from 'src/config/app.config';
 import { EvmEventsJobs, LocalQueueEnum } from 'src/modules/queue/enums';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { Log, id } from 'ethers';
+import { Log, id, Interface, LogDescription } from 'ethers';
 import { EVENT_TRANSFER } from './constants';
 import { ContractService } from 'src/modules/contracts/contract.service';
 import { asyncPaginateRawAndEntities } from 'src/common/helpers/iterator.helper';
+import { Nullable } from 'src/common/interfaces';
+import { LogParsed } from './interfaces';
+import { Format } from './utils/format';
 
 @Injectable()
 export class EvmEventsService implements OnModuleInit {
@@ -129,10 +132,36 @@ export class EvmEventsService implements OnModuleInit {
   }
 
   @LoggerContext({ logError: true })
-  private async processLogs(chainId: ChainId, logs: Log[]): Promise<Log[]> {
-    return logs.filter(
-      (event) => !event.removed && this.topicPool.has(this.getTopicKey(event.topics[0], event.address, chainId)),
-    );
+  private async processLogs(chainId: ChainId, logs: Log[]): Promise<LogParsed[]> {
+    return logs
+      .filter(
+        (event) => !event.removed && this.topicPool.has(this.getTopicKey(event.topics[0], event.address, chainId)),
+      )
+      .map((event) => {
+        const logParse = this.tryParseLog({
+          topics: event.topics as string[],
+          data: event.data,
+        });
+        if (!logParse || Number(logParse?.args?.length ?? 0) < 3) return null;
+        const args = Format.from(logParse.args);
+        return {
+          address: event.address,
+          blockHash: event.blockHash,
+          blockNumber: event.blockNumber,
+          transactionHash: event.transactionHash,
+          transactionIndex: event.transactionIndex,
+          signature: logParse.signature,
+          name: logParse.name,
+          topics: event.topics,
+          topic: logParse.topic,
+          args: {
+            from: args[0],
+            to: args[1],
+            tokenId: args[2],
+          },
+        };
+      })
+      .filter((event) => event !== null) as LogParsed[];
   }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
@@ -145,6 +174,21 @@ export class EvmEventsService implements OnModuleInit {
   }
 
   private getTopicKey(topic: string, address: string, chainId: ChainId) {
-    return `${topic}:${chainId}:${address?.toLowerCase()}`;
+    // return `${topic}:${chainId}:${address?.toLowerCase()}`;
+    return `${topic}:${chainId}}`;
+  }
+
+  private tryParseLog(log: { topics: string[]; data: string }): Nullable<LogDescription> {
+    try {
+      const iface = new Interface([
+        'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)',
+        // TODO: when support ERC1155
+        // 'event Transfer(address indexed from, address indexed to, uint256 value)',
+      ]);
+      if (!iface) return null;
+      return iface.parseLog(log);
+    } catch (error) {
+      return null;
+    }
   }
 }
