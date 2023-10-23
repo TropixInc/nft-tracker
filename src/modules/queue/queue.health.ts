@@ -11,7 +11,7 @@ export class QueueHealthIndicator extends HealthIndicator {
   constructor(
     @InjectQueue(LocalQueueEnum.Webhook) private readonly webhookQueue: Queue,
     @InjectQueue(LocalQueueEnum.TokenJob) private readonly tokenJobQueue: Queue,
-    @InjectQueue(LocalQueueEnum.TokenJob) private readonly evmEventsQueue: Queue,
+    @InjectQueue(LocalQueueEnum.EvmEvents) private readonly evmEventsQueue: Queue,
   ) {
     super();
     this.queues.set(webhookQueue.name, webhookQueue);
