@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cache } from 'cache-manager';
 import { isURL } from 'class-validator';
 import { BigNumberish } from 'ethers';
 import { isString } from 'lodash';
@@ -17,8 +18,9 @@ export class ERC721Provider extends EvmService {
   constructor(
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
+    protected readonly cacheManager: Cache,
   ) {
-    super(configService, configurationService);
+    super(configService, configurationService, cacheManager);
   }
 
   async create<ContractInterface extends ERC721>(address: string, chainId: ChainId) {
@@ -30,6 +32,7 @@ export class ERC721Provider extends EvmService {
       chainId,
       this.configService,
       this.configurationService,
+      this.cacheManager,
     );
   }
 }
@@ -41,8 +44,9 @@ export class ERC721Contract<T extends ERC721> extends EvmService {
     private readonly chainId: ChainId,
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
+    protected readonly cacheManager: Cache,
   ) {
-    super(configService, configurationService);
+    super(configService, configurationService, cacheManager);
   }
 
   async name(): Promise<string> {

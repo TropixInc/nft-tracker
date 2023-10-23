@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber';
 import { ChainId } from 'src/common/enums';
 
 export interface EventSyncBlock {
@@ -6,7 +7,7 @@ export interface EventSyncBlock {
 }
 
 export interface LogParsed {
-  args: { from: string; to: string; tokenId: string; [key: string]: string };
+  args: { from: string; to: string; tokenId: BigNumber };
   transactionHash: string;
   blockHash: string;
   blockNumber: number;
@@ -16,4 +17,5 @@ export interface LogParsed {
   signature: string;
   topics: string[];
   topic: string;
+  timestamp: number;
 }

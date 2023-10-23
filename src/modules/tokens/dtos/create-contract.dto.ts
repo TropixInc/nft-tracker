@@ -15,7 +15,7 @@ export class CreateContractDto {
   @ValidateChainId()
   chainId: ChainId;
 
-  @ApiProperty({ type: Boolean, description: 'Cache media', example: true })
+  @ApiProperty({ type: Boolean, description: 'Cache media', example: false })
   @IsBoolean()
   cacheMedia: boolean;
 }

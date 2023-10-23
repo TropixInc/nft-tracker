@@ -15,6 +15,8 @@ import { asyncPaginateRawAndEntities } from 'src/common/helpers/iterator.helper'
 import { Nullable } from 'src/common/interfaces';
 import { LogParsed } from './interfaces';
 import { Format } from './utils/format';
+import { parallel } from 'radash';
+import { TokensTransferService } from 'src/modules/tokens/tokens-transfer.service';
 
 @Injectable()
 export class EvmEventsService implements OnModuleInit {
@@ -28,6 +30,8 @@ export class EvmEventsService implements OnModuleInit {
     @InjectQueue(LocalQueueEnum.EvmEvents) private eventsQueue: Queue,
     @Inject(forwardRef(() => ContractService))
     private readonly contractService: ContractService,
+    @Inject(forwardRef(() => TokensTransferService))
+    private readonly tokenTransferService: TokensTransferService,
   ) {}
 
   async onModuleInit() {
@@ -95,7 +99,14 @@ export class EvmEventsService implements OnModuleInit {
       this.logger.verbose(`Get log ${blockNumber} on chain ${chainId}`);
       const provider = await this.evmService.getJsonRpcProviderByChainId(chainId);
       const logs = await provider.getLogs({ fromBlock: blockNumber, toBlock: blockNumber });
-      await this.processLogs(chainId, logs);
+      const block = await this.evmService.getBlock(chainId, blockNumber);
+      const logsProcessed = await this.processLogs(chainId, logs, block.timestamp);
+      parallel(5, logsProcessed, async (log) => {
+        await this.tokenTransferService.createHistory({
+          chainId,
+          ...log,
+        });
+      });
     } catch (error) {
       this.logger.error(`Error on block ${blockNumber} on chain ${chainId}`);
       this.logger.error(error);
@@ -132,7 +143,7 @@ export class EvmEventsService implements OnModuleInit {
   }
 
   @LoggerContext({ logError: true })
-  private async processLogs(chainId: ChainId, logs: Log[]): Promise<LogParsed[]> {
+  private async processLogs(chainId: ChainId, logs: Log[], timestamp: number): Promise<LogParsed[]> {
     return logs
       .filter(
         (event) => !event.removed && this.topicPool.has(this.getTopicKey(event.topics[0], event.address, chainId)),
@@ -159,6 +170,7 @@ export class EvmEventsService implements OnModuleInit {
             to: args[1],
             tokenId: args[2],
           },
+          timestamp,
         };
       })
       .filter((event) => event !== null) as LogParsed[];
@@ -174,8 +186,7 @@ export class EvmEventsService implements OnModuleInit {
   }
 
   private getTopicKey(topic: string, address: string, chainId: ChainId) {
-    // return `${topic}:${chainId}:${address?.toLowerCase()}`;
-    return `${topic}:${chainId}}`;
+    return `${topic}:${chainId}:${address?.toLowerCase()}`;
   }
 
   private tryParseLog(log: { topics: string[]; data: string }): Nullable<LogDescription> {

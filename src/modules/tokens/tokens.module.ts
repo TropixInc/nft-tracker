@@ -15,11 +15,13 @@ import { TokensJobsUploadAssetService } from './tokens-jobs-upload-asset.service
 import { TokensJobsRefreshTokenService } from './tokens-jobs-refresh-token.service';
 import { ContractModule } from '../contracts/contract.module';
 import { EvmModule } from '../blockchain/evm/evm.module';
+import { TokenTransferEntity } from './entities/tokens-transfer.entity';
+import { TokensTransferService } from './tokens-transfer.service';
 
 @Module({
   imports: [
     QueueModule,
-    TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity]),
+    TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity, TokenTransferEntity]),
     forwardRef(() => EvmModule.forRoot()),
     forwardRef(() => ContractModule),
   ],
@@ -33,7 +35,8 @@ import { EvmModule } from '../blockchain/evm/evm.module';
     TokenJobProcessor,
     TokensJobsUploadAssetService,
     TokensJobsRefreshTokenService,
+    TokensTransferService,
   ],
-  exports: [TokensService, TokensJobsService],
+  exports: [TokensService, TokensJobsService, TokensTransferService],
 })
 export class TokensModule {}

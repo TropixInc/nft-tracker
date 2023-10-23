@@ -16,9 +16,11 @@ export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: true, type: 'text' })
   description?: Optional<string>;
 
+  @Index()
   @Column({ nullable: false, transformer: [lowercase] })
   address: string;
 
+  @Index()
   @Column({ nullable: false, type: 'integer' })
   chainId: ChainId;
 

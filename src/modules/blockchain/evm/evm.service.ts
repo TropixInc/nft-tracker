@@ -1,13 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChainId } from 'src/common/enums';
 import { AppConfig } from 'src/config/app.config';
-import { ethers, JsonRpcProvider, WebSocketProvider } from 'ethers';
+import { BigNumberish, ethers, formatUnits, JsonRpcProvider, WebSocketProvider } from 'ethers';
 import { ChainIsNotSupportedException } from '../exceptions';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
 import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
 import { Optional } from 'src/common/interfaces';
 import * as ws from 'ws';
+import { cacheResolver } from 'src/common/helpers/cache.helper';
+import { Cache } from 'cache-manager';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class EvmService {
@@ -18,6 +21,7 @@ export class EvmService {
   constructor(
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
+    @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
   ) {}
 
   public async getContractAt<T>(address: string, chainId: ChainId, abi: string[]): Promise<T> {
@@ -65,6 +69,33 @@ export class EvmService {
     const statusWs = await this.checkAllWsProviders();
     const statusHttp = await this.checkAllJsonRpcProviders();
     return { statusHttp, statusWs };
+  }
+
+  async getBlock(chainId: number, blockNumber: number) {
+    return await cacheResolver(
+      this.cacheManager,
+      `getBlock:${chainId}:${blockNumber}`,
+      async () => {
+        const provider = await this.getJsonRpcProviderByChainId(chainId);
+        const block = await provider.getBlock(blockNumber);
+        if (!block) throw new Error(`Block ${blockNumber} not found`);
+        const format = (v: BigNumberish) => formatUnits(v, 'gwei');
+        return {
+          hash: block.hash,
+          parentHash: block.parentHash,
+          number: block.number,
+          timestamp: block.timestamp,
+          nonce: block.nonce,
+          difficulty: block.difficulty?.toString(),
+          gasLimit: format(block.gasLimit),
+          gasUsed: format(block.gasUsed),
+          miner: block.parentHash,
+          extraData: block.extraData,
+          baseFeePerGas: block.baseFeePerGas ? format(block.baseFeePerGas) : block.baseFeePerGas?.toString(),
+        };
+      },
+      { ttl: 60 },
+    );
   }
 
   private async checkAllWsProviders() {
@@ -192,7 +223,7 @@ export class EvmService {
       case ChainId.MUMBAI:
         return 'https://rpc-mumbai.maticvigil.com';
       case ChainId.POLYGON:
-        return 'https://polygon.api.onfinality.io/public';
+        return 'https://polygon-rpc.com';
       case ChainId.MAINNET:
         return 'https://eth.meowrpc.com';
       default:

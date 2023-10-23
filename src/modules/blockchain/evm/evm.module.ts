@@ -7,6 +7,7 @@ import { isWatcher } from 'src/config/app.config';
 import { EvmEventsWatcher } from './queue/evm-events-watcher.processor';
 import { ContractModule } from 'src/modules/contracts/contract.module';
 import { EvmEventsProcessor } from './queue/evm-events-worker.processor';
+import { TokensModule } from 'src/modules/tokens/tokens.module';
 
 export class EvmModule {
   static forRoot(): DynamicModule {
@@ -14,7 +15,7 @@ export class EvmModule {
     isWatcher() && providers.push(EvmEventsWatcher);
     return {
       module: EvmModule,
-      imports: [QueueModule, forwardRef(() => ContractModule)],
+      imports: [QueueModule, forwardRef(() => ContractModule), forwardRef(() => TokensModule)],
       controllers: [],
       providers: providers,
       exports: providers,

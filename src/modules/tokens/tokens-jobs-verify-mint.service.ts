@@ -55,6 +55,7 @@ export class TokensJobsVerifyMintService {
           });
           this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
         }
+        this.logger.debug(`Finished verify mint job ${job.tokensIds.join(',')} with ${countTokensFound} found`);
       } catch (error) {
         this.logger.error(error);
         await this.tokenJobRepository.update(job.id, {
@@ -122,6 +123,7 @@ export class TokensJobsVerifyMintService {
             this.logger.debug(`Get information of token ${params.address}/${params.chainId}/${tokenId}`);
             const uri = await contract.getTokenUri(tokenId);
             const tokenUri = contract.formatTokenUri(tokenId, baseUri, uri);
+            this.logger.debug(`Token uri of token ${params.address}/${params.chainId}/${tokenId} is ${tokenUri}`);
             if (!tokenUri) {
               this.logger.error(`TokenUri is not valid for token ${params.address}/${params.chainId}/${tokenId}`);
               await Promise.resolve();
