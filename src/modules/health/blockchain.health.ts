@@ -8,9 +8,9 @@ export class BlockchainHealthIndicator extends HealthIndicator {
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
-    const { statusHttp } = await this.ethereumService.getBlockchainCheckedProviders();
-    const isHealthy = statusHttp.ready;
-    const result = this.getStatus(key, isHealthy, { statusHttp });
+    const { statusHttp, statusWs } = await this.ethereumService.getBlockchainCheckedProviders();
+    const isHealthy = statusHttp.ready && statusWs.ready;
+    const result = this.getStatus(key, isHealthy, { statusHttp, statusWs });
 
     if (isHealthy) {
       return result;

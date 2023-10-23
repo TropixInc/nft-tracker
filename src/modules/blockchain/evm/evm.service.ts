@@ -7,6 +7,7 @@ import { ChainIsNotSupportedException } from '../exceptions';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
 import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
 import { Optional } from 'src/common/interfaces';
+import * as ws from 'ws';
 
 @Injectable()
 export class EvmService {
@@ -61,8 +62,28 @@ export class EvmService {
   }
 
   public async getBlockchainCheckedProviders() {
+    const statusWs = await this.checkAllWsProviders();
     const statusHttp = await this.checkAllJsonRpcProviders();
-    return { statusHttp };
+    return { statusHttp, statusWs };
+  }
+
+  private async checkAllWsProviders() {
+    const data = {
+      ready: true,
+      chains: [] as { name: ChainId; state: boolean }[],
+    };
+    const providers = await this.getWebSocketProviders();
+    for await (const [chain, provider] of providers) {
+      const state = provider.websocket.readyState;
+      data.chains.push({
+        name: chain,
+        state: state === ws.OPEN,
+      });
+      data.ready = state === ws.OPEN ? data.ready : false;
+    }
+
+    data.ready = data.chains.length ? data.ready : false;
+    return data;
   }
 
   private async checkAllJsonRpcProviders() {
@@ -103,6 +124,19 @@ export class EvmService {
     }
 
     return Array.from(this.jsonRpcProvidersPool.entries());
+  }
+
+  private async getWebSocketProviders() {
+    if (this.supportedChainIds().length > 0) {
+      // Load all providers
+      await Promise.all(
+        this.supportedChainIds().map(async (chainId) => {
+          await this.getWebSocketProviderByChainId(chainId);
+        }),
+      );
+    }
+
+    return Array.from(this.webSocketProvidersPool.entries());
   }
 
   public supportedChainIds(): ChainId[] {
