@@ -1,5 +1,6 @@
 import { ChainId } from 'common/enums';
 import { Optional } from 'src/common/interfaces';
+import { LogParsed } from 'src/modules/blockchain/evm/interfaces';
 import { TokenAssetStatus, TokenJobStatus, TokenJobType } from '../enums';
 
 export interface Token {
@@ -72,3 +73,5 @@ export interface TokenAsset {
   url?: Optional<string>;
   status: TokenAssetStatus;
 }
+
+export type TokenHistoryParams = LogParsed & { chainId: ChainId };

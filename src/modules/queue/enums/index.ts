@@ -1,6 +1,7 @@
 export enum LocalQueueEnum {
   Webhook = 'webhook',
   TokenJob = 'tokenJob',
+  EvmEvents = 'evmEvents',
 }
 
 export enum QueueConfigEnum {
@@ -23,4 +24,8 @@ export enum TokenJobJobs {
   ExecuteFetchOwnerAddressByJob = 'executeFetchOwnerAddressByJob',
   SyncTotalSupply = 'syncTotalSupply',
   ResyncVerifyMint = 'resyncVerifyMint',
+}
+
+export enum EvmEventsJobs {
+  SyncBlock = 'syncBlock',
 }
