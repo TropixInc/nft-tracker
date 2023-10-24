@@ -14,11 +14,11 @@ export enum WebhookJobs {
 }
 
 export enum TokenJobJobs {
-  ExecuteVerifyMint = 'executeVerifyMint',
   CheckJobFrozen = 'checkJobFrozen',
   ExecuteFetchMetadataByJob = 'executeFetchMetadataByJob',
   ExecuteRefreshTokenByJob = 'executeRefreshTokenByJob',
   ExecuteUploadAssetByJob = 'executeUploadAssetByJob',
+  ExecuteVerifyMintByJob = 'executeVerifyMintByJob',
   CreateFetchJobs = 'createFetchJobs',
   CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',
   ExecuteFetchOwnerAddressByJob = 'executeFetchOwnerAddressByJob',
@@ -27,5 +27,5 @@ export enum TokenJobJobs {
 }
 
 export enum EvmEventsJobs {
-  SyncBlock = 'syncBlock',
+  SyncBlock = 'syncBlockJob',
 }

@@ -108,7 +108,7 @@ export class EvmService {
       const state = provider.websocket.readyState;
       data.chains.push({
         name: chain,
-        state: state === ws.OPEN,
+        state: state === ws.OPEN || state === ws.CONNECTING,
       });
       data.ready = state === ws.OPEN ? data.ready : false;
     }

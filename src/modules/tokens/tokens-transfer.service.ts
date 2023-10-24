@@ -4,7 +4,9 @@ import { isString } from 'lodash';
 import { Not, Repository } from 'typeorm';
 import { TokenTransferEntity } from './entities/tokens-transfer.entity';
 import { TokenEntity } from './entities/tokens.entity';
+import { TokenJobType } from './enums';
 import { TokenHistoryParams } from './interfaces';
+import { TokensJobsService } from './tokens-jobs.service';
 
 @Injectable()
 export class TokensTransferService {
@@ -14,6 +16,7 @@ export class TokensTransferService {
     private readonly repository: Repository<TokenTransferEntity>,
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
+    private readonly tokensJobsService: TokensJobsService,
   ) {}
 
   async createHistory(params: TokenHistoryParams): Promise<void> {
@@ -37,12 +40,25 @@ export class TokensTransferService {
     const ownerAddress = params.args.to?.toLowerCase();
     const isIndexIsGreaterOtherRegistered =
       historyByTransaction.some((tx) => tx.transactionIndex > params.transactionIndex) === false;
-    if (isString(ownerAddress) && isIndexIsGreaterOtherRegistered) {
+
+    const tokenExist = await this.tokenRepository.findOne({
+      where: {
+        address: params.address.toLowerCase(),
+        chainId: params.chainId,
+        tokenId: params.args.tokenId.toBigInt().toString(),
+      },
+    });
+    if (!tokenExist) {
+      await this.tokensJobsService.createJob({
+        address: params.address.toLowerCase(),
+        chainId: params.chainId,
+        type: TokenJobType.VerifyMint,
+        tokensIds: [params.args.tokenId.toBigInt()].map(String),
+      });
+    } else if (isString(ownerAddress) && isIndexIsGreaterOtherRegistered) {
       await this.tokenRepository.update(
         {
-          address: params.address.toLowerCase(),
-          chainId: params.chainId,
-          tokenId: params.args.tokenId.toBigInt().toString(),
+          id: tokenExist.id,
           ownerAddress: Not(ownerAddress),
         },
         {

@@ -11,7 +11,7 @@ export class EvmEventsWatcher implements OnModuleInit {
     private readonly evmService: EvmService,
   ) {}
   async onModuleInit() {
-    const chains = await this.evmService.supportedChainIds();
+    const chains = this.evmService.supportedChainIds();
     for await (const chainId of chains) {
       this.logger.log(`Create subscribe event: ${chainId}`);
       await this.eventsService.subscribeBlockNumberByChainId(chainId);
