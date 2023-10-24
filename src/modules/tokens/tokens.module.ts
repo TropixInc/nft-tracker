@@ -22,7 +22,7 @@ import { TokensTransferService } from './tokens-transfer.service';
   imports: [
     QueueModule,
     TypeOrmModule.forFeature([TokenEntity, TokenJobEntity, TokenAssetEntity, TokenTransferEntity]),
-    forwardRef(() => EvmModule.forRoot()),
+    forwardRef(() => EvmModule),
     forwardRef(() => ContractModule),
   ],
   controllers: [TokensController],
