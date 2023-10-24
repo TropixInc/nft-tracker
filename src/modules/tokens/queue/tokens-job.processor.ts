@@ -60,10 +60,6 @@ export class TokenJobProcessor
         cron: CronExpression.EVERY_MINUTE,
       },
       {
-        name: TokenJobJobs.ExecuteVerifyMint,
-        cron: CronExpression.EVERY_5_SECONDS,
-      },
-      {
         name: TokenJobJobs.CheckJobFrozen,
         cron: CronExpression.EVERY_MINUTE,
       },
@@ -95,10 +91,10 @@ export class TokenJobProcessor
     );
   }
 
-  @Process({ name: TokenJobJobs.ExecuteVerifyMint, concurrency: 1 })
+  @Process({ name: TokenJobJobs.ExecuteVerifyMintByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
-  async executeVerifyMintHandler() {
-    await this.verifyMintService.execute();
+  async executeVerifyMintHandler(job: Job<{ jobId: string }>) {
+    await this.verifyMintService.execute(job.data.jobId);
   }
 
   @Process({ name: TokenJobJobs.ExecuteFetchMetadataByJob, concurrency: 1 })
@@ -146,6 +142,7 @@ export class TokenJobProcessor
       this.fetchOwnerAddressService.scheduleNextJobs(),
       this.uploadAssetService.scheduleNextJobs(),
       this.refreshTokenService.scheduleNextJobs(),
+      this.verifyMintService.scheduleNextJobs(),
     ]);
   }
 

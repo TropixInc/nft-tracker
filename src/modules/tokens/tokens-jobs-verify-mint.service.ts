@@ -4,12 +4,15 @@ import { ChainId } from 'common/enums';
 import { parallel } from 'radash';
 import { runTransaction } from 'common/helpers/transaction.helper';
 import { DatabaseFunctionOptions, Optional } from 'src/common/interfaces';
-import { LessThan, QueryRunner, Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { differenceInMinutes, subMinutes } from 'date-fns';
 import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
+import { InjectQueue } from '@nestjs/bull';
+import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
+import { Queue } from 'bull';
 
 @Injectable()
 export class TokensJobsVerifyMintService {
@@ -19,10 +22,19 @@ export class TokensJobsVerifyMintService {
     @InjectRepository(TokenJobEntity)
     private tokenJobRepository: Repository<TokenJobEntity>,
     private eRC721Provider: ERC721Provider,
+    @InjectQueue(LocalQueueEnum.TokenJob)
+    private readonly queue: Queue,
   ) {}
-  async execute(): Promise<void> {
+  async execute(jobId: string): Promise<void> {
     return runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
-      const job = await this.getNextJob(queryRunner);
+      const job = await this.tokenJobRepository.findOne({
+        where: {
+          id: jobId,
+          status: TokenJobStatus.Created,
+          type: TokenJobType.VerifyMint,
+          startedAt: LessThan(new Date()),
+        },
+      });
       if (!job) {
         return Promise.resolve();
       }
@@ -87,8 +99,8 @@ export class TokensJobsVerifyMintService {
     return Array.from({ length: numberOfItems }, (_, index) => highestValue + index + 1).map(String);
   }
 
-  private async getNextJob(queryRunner: QueryRunner): Promise<Optional<TokenJobEntity>> {
-    return queryRunner.manager.findOne(TokenJobEntity, {
+  async scheduleNextJobs(): Promise<void> {
+    const jobs = await this.tokenJobRepository.find({
       where: {
         status: TokenJobStatus.Created,
         type: TokenJobType.VerifyMint,
@@ -97,10 +109,24 @@ export class TokensJobsVerifyMintService {
       order: {
         executeAt: 'ASC',
       },
-      lock: {
-        mode: 'for_key_share',
-        onLocked: 'skip_locked',
-      },
+      take: 5,
+    });
+    await parallel(10, jobs, async (job) => {
+      await this.queue.add(
+        TokenJobJobs.ExecuteVerifyMintByJob,
+        {
+          jobId: job.id,
+        },
+        {
+          jobId: `${TokenJobJobs.ExecuteVerifyMintByJob}:${job.id}`,
+          attempts: 3,
+          removeOnComplete: {
+            age: 2 * 60,
+            count: 1000,
+          },
+          removeOnFail: true,
+        },
+      );
     });
   }
 
