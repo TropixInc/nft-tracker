@@ -1,7 +1,6 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job, Queue } from 'bull';
-import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
 import { ChainId } from 'src/common/enums';
 import { ApplicationWorker } from 'src/common/interfaces';
 import { EvmEventsJobs, LocalQueueEnum } from 'src/modules/queue/enums';
@@ -21,7 +20,6 @@ export class EvmEventsProcessor implements ApplicationWorker<'syncBlock'> {
   ) {}
 
   @Process(EvmEventsJobs.SyncBlock)
-  @LoggerContext({ logError: true })
   async syncBlockHandler(job: Job<EventSyncBlock>) {
     if (this.evmService.supportChainId(job.data.chainId)) {
       this.logger.verbose(`[${job.data.chainId}] Receive block ${job.data.blockNumber} of chain`);
