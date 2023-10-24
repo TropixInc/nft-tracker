@@ -106,11 +106,12 @@ export class EvmService {
     const providers = await this.getWebSocketProviders();
     for await (const [chain, provider] of providers) {
       const state = provider.websocket.readyState;
+      const ready = state === ws.OPEN || state === ws.CONNECTING;
       data.chains.push({
         name: chain,
-        state: state === ws.OPEN || state === ws.CONNECTING,
+        state: ready,
       });
-      data.ready = state === ws.OPEN ? data.ready : false;
+      data.ready = ready ? data.ready : false;
     }
 
     data.ready = data.chains.length ? data.ready : false;
