@@ -64,6 +64,7 @@ export class TokensTransferService {
         {
           ownerAddress: ownerAddress,
           lastOwnerAddressChangeAt: new Date(),
+          lastOwnerAddressCheckAt: new Date(),
         },
       );
     }

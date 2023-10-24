@@ -109,7 +109,7 @@ import { EvmModule } from './modules/blockchain/evm/evm.module';
     DatabaseModule,
     WebhookModule,
     ContractModule,
-    EvmModule.forRoot(),
+    EvmModule,
     TokensModule,
     AuthModule,
   ],

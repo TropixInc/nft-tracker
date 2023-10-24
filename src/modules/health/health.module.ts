@@ -20,7 +20,7 @@ import { PrometheusOptionsService } from './prometheus-options.service';
       inject: [],
       useClass: PrometheusOptionsService,
     }),
-    EvmModule.forRoot(),
+    EvmModule,
   ],
   controllers: [HealthController],
   providers: [
