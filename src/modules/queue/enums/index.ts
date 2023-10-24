@@ -27,5 +27,5 @@ export enum TokenJobJobs {
 }
 
 export enum EvmEventsJobs {
-  SyncBlock = 'syncBlock',
+  SyncBlock = 'syncBlockJob',
 }
