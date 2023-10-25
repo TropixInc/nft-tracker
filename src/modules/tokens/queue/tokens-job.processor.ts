@@ -103,13 +103,13 @@ export class TokenJobProcessor
     await this.fetchMetadataService.execute(job.data.jobId);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddressByJob, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddressByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeFetchOwnerAddressHandler(job: Job<{ jobId: string }>) {
     await this.fetchOwnerAddressService.execute(job.data.jobId);
   }
 
-  @Process({ name: TokenJobJobs.ExecuteUploadAssetByJob, concurrency: 5 })
+  @Process({ name: TokenJobJobs.ExecuteUploadAssetByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeUploadAssetHandler(job: Job<{ jobId: string }>) {
     await this.uploadAssetService.execute(job.data.jobId);
