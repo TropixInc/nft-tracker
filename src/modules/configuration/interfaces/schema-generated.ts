@@ -11,6 +11,7 @@ export type EVM = {
   chainId: number;
   rpc: string;
   wss: string;
+  confirmation?: number;
   [k: string]: unknown;
 }[];
 

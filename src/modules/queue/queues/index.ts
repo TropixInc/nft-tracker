@@ -17,4 +17,15 @@ export const Queues = [
       timeout: 15 * 60 * 1000,
     },
   }),
+  BullModule.registerQueue({
+    name: LocalQueueEnum.EvmEvents,
+    configKey: QueueConfigEnum.Local,
+    defaultJobOptions: {
+      delay: 500,
+      stackTraceLimit: 5,
+      removeOnComplete: true,
+      attempts: 1,
+      timeout: 15 * 60 * 1000,
+    },
+  }),
 ];

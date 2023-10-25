@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cache } from 'cache-manager';
 import { isURL } from 'class-validator';
 import { BigNumberish } from 'ethers';
 import { isString } from 'lodash';
@@ -7,18 +8,19 @@ import { ChainId } from 'src/common/enums';
 import { Optional } from 'src/common/interfaces';
 import { AppConfig } from 'src/config/app.config';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
-import { EthereumService } from '../ethereum.service';
+import { EvmService } from '../evm.service';
 import { ERC721 } from '../interfaces/ERC721';
 import erc721Abi from '../static/erc721.abi.json';
 import { isIPFSHash } from '../utils';
 
 @Injectable()
-export class ERC721Provider extends EthereumService {
+export class ERC721Provider extends EvmService {
   constructor(
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
+    protected readonly cacheManager: Cache,
   ) {
-    super(configService, configurationService);
+    super(configService, configurationService, cacheManager);
   }
 
   async create<ContractInterface extends ERC721>(address: string, chainId: ChainId) {
@@ -30,19 +32,21 @@ export class ERC721Provider extends EthereumService {
       chainId,
       this.configService,
       this.configurationService,
+      this.cacheManager,
     );
   }
 }
 
-export class ERC721Contract<T extends ERC721> extends EthereumService {
+export class ERC721Contract<T extends ERC721> extends EvmService {
   constructor(
     private readonly contract: T,
     private readonly address: string,
     private readonly chainId: ChainId,
     protected readonly configService: ConfigService<AppConfig>,
     protected readonly configurationService: ConfigurationService,
+    protected readonly cacheManager: Cache,
   ) {
-    super(configService, configurationService);
+    super(configService, configurationService, cacheManager);
   }
 
   async name(): Promise<string> {

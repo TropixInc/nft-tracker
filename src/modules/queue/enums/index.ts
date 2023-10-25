@@ -1,6 +1,7 @@
 export enum LocalQueueEnum {
   Webhook = 'webhook',
   TokenJob = 'tokenJob',
+  EvmEvents = 'evmEvents',
 }
 
 export enum QueueConfigEnum {
@@ -13,14 +14,18 @@ export enum WebhookJobs {
 }
 
 export enum TokenJobJobs {
-  ExecuteVerifyMint = 'executeVerifyMint',
   CheckJobFrozen = 'checkJobFrozen',
   ExecuteFetchMetadataByJob = 'executeFetchMetadataByJob',
   ExecuteRefreshTokenByJob = 'executeRefreshTokenByJob',
   ExecuteUploadAssetByJob = 'executeUploadAssetByJob',
+  ExecuteVerifyMintByJob = 'executeVerifyMintByJob',
   CreateFetchJobs = 'createFetchJobs',
   CreateFetchOwnerAddressJobs = 'createFetchOwnerAddressJobs',
   ExecuteFetchOwnerAddressByJob = 'executeFetchOwnerAddressByJob',
   SyncTotalSupply = 'syncTotalSupply',
   ResyncVerifyMint = 'resyncVerifyMint',
+}
+
+export enum EvmEventsJobs {
+  SyncBlock = 'syncBlockJob',
 }

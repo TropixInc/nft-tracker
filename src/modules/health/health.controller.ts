@@ -26,6 +26,7 @@ import { BlockchainHealthIndicator } from './blockchain.health';
 
 const LOCAL_WEBHOOK_KEY = `${LocalQueueEnum.Webhook}_queue` as const;
 const LOCAL_TOKEN_JOB_KEY = `${LocalQueueEnum.TokenJob}_queue` as const;
+const LOCAL_EVM_EVENTS_KEY = `${LocalQueueEnum.EvmEvents}_queue` as const;
 
 interface Indicators {
   migration: () => Promise<HealthIndicatorResult>;
@@ -35,6 +36,7 @@ interface Indicators {
   blockchain: () => Promise<HealthIndicatorResult>;
   [LOCAL_WEBHOOK_KEY]: () => Promise<HealthIndicatorResult>;
   [LOCAL_TOKEN_JOB_KEY]: () => Promise<HealthIndicatorResult>;
+  [LOCAL_EVM_EVENTS_KEY]: () => Promise<HealthIndicatorResult>;
 }
 
 function getMaxMemory(): number {
@@ -122,6 +124,7 @@ export class HealthController extends PrometheusController {
       blockchain: () => this.blockchainHealthIndicator.isHealthy('blockchain'),
       [LOCAL_WEBHOOK_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.Webhook),
       [LOCAL_TOKEN_JOB_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.TokenJob),
+      [LOCAL_EVM_EVENTS_KEY]: () => this.queueHealthIndicator.isHealthy(LocalQueueEnum.EvmEvents),
     };
   }
 

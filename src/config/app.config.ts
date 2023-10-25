@@ -9,6 +9,9 @@ import { splitClear, splitLog } from './helpers';
 import { ApplicationEnvEnum, ChainId, LogLevel, NodeEnv } from 'common/enums';
 import { createJSONObjectValidator } from 'common/helpers/joi.helper';
 import { parseRedisURL } from 'common/helpers/connection.helper';
+
+export type AppKind = 'standalone' | 'watcher' | 'worker';
+
 export interface CloudinaryConfig {
   endpointUrl: string;
   cloudName: string;
@@ -40,12 +43,14 @@ export interface AppConfig {
   feature_flags?: Record<string, any>;
   cloudinary: CloudinaryConfig;
   chain_ids: ChainId[];
+  kind: AppKind;
 }
 
 export interface EnvironmentVariables extends DatabaseEnv {
   NODE_ENV: NodeEnv;
   APP_NAME: string;
   APP_ENV?: ApplicationEnvEnum;
+  APP_KIND: AppKind;
   HOST: string;
   PORT: number;
   LOG_LEVEL: LogLevel[];
@@ -66,6 +71,7 @@ export const validationSchema = Joi.object<EnvironmentVariables, true>({
   APP_ENV: Joi.string()
     .valid(...Object.values(ApplicationEnvEnum))
     .default(ApplicationEnvEnum.LOCAL),
+  APP_KIND: Joi.string().valid('standalone', 'watcher', 'worker').default('standalone'),
   NODE_ENV: Joi.string().valid('development', 'production', 'test', 'provision').default('development'),
 
   LOG_LEVEL: Joi.extend((joi) => ({
@@ -169,6 +175,7 @@ export const getAppConfig = (): AppConfig => {
     feature_flags: env.FEATURE_FLAGS,
     cloudinary: env.CLOUDINARY,
     chain_ids: env.CHAIN_IDS,
+    kind: env.APP_KIND,
   };
 };
 
@@ -185,3 +192,7 @@ function prettyPrintEnv(env: Record<string, any>): void {
       }, ''),
   );
 }
+
+export const isWatcher = () => ['standalone', 'watcher'].includes(process.env.APP_KIND?.trim() as AppKind);
+
+export const isWorker = () => ['standalone', 'worker'].includes(process.env.APP_KIND?.trim() as AppKind);

@@ -11,10 +11,12 @@ export class QueueHealthIndicator extends HealthIndicator {
   constructor(
     @InjectQueue(LocalQueueEnum.Webhook) private readonly webhookQueue: Queue,
     @InjectQueue(LocalQueueEnum.TokenJob) private readonly tokenJobQueue: Queue,
+    @InjectQueue(LocalQueueEnum.EvmEvents) private readonly evmEventsQueue: Queue,
   ) {
     super();
     this.queues.set(webhookQueue.name, webhookQueue);
     this.queues.set(tokenJobQueue.name, tokenJobQueue);
+    this.queues.set(evmEventsQueue.name, evmEventsQueue);
   }
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
