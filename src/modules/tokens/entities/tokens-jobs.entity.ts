@@ -7,6 +7,8 @@ import { Optional } from 'src/common/interfaces';
 import { TokenJobStatus, TokenJobType } from '../enums';
 
 @Entity({ name: 'tokens_jobs' })
+@Index(['type', 'status', 'executeAt'], { where: 'deleted_at IS NULL', background: true })
+@Index(['address', 'chainId'], { where: 'deleted_at IS NULL', background: true })
 export class TokenJobEntity extends BaseEntity implements TokenJob {
   @Index()
   @Column({ nullable: true, transformer: [lowercase], type: 'varchar' })
