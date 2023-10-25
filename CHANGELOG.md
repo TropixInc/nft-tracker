@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.8](https://github.com/TropixInc/nft-tracker/compare/v0.0.7...v0.0.8) (2023-10-25)
+
+
+### Features
+
+* creating structure to process logs ([8bb0284](https://github.com/TropixInc/nft-tracker/commit/8bb028413f9d754f26c382dfebdcb76ad37aae9e))
+* **event:** save transfer event ([144b10c](https://github.com/TropixInc/nft-tracker/commit/144b10ca657f9bf3bbdf43bebbf9ec0da4afe54f))
+* **events:** listening for new block events ([a9e778b](https://github.com/TropixInc/nft-tracker/commit/a9e778ba15a47620ea71d6c531044f44d2e021af))
+* **events:** parsing ERC721 contract events of transfer ([3317619](https://github.com/TropixInc/nft-tracker/commit/3317619ffcf1dcc780ed4520abd11bdcb1e4ae21))
+* **token:** creating the token when it has just been minted ([4991ae5](https://github.com/TropixInc/nft-tracker/commit/4991ae52c0cb95d85ddbf0de8c668ca7423967b8))
+* **verify mint:** putting the bull in control of the next items to be verify at the mint ([93483d6](https://github.com/TropixInc/nft-tracker/commit/93483d62e4575927ceac94b2dabf350e1ed69c7a))
+
+
+### Bug Fixes
+
+* **health:** checking wss provider is ready ([d764ba6](https://github.com/TropixInc/nft-tracker/commit/d764ba6a29ac360c49073743f16a6e2f2453b799))
+* **heath:** fixing check of queue ([68f0d4b](https://github.com/TropixInc/nft-tracker/commit/68f0d4bf38af504e0cddad6cb1daa33aa99772ba))
+* **queue:** sync block ([7b726d1](https://github.com/TropixInc/nft-tracker/commit/7b726d16619660aa75158f1c1dfc34d62ec2f450))
+
 ### [0.0.7](https://github.com/TropixInc/nft-tracker/compare/v0.0.6...v0.0.7) (2023-10-17)
 
 
