@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { Queue } from 'bull';
-import { isJSON, isNotEmptyObject, isURL } from 'class-validator';
+import { isJSON, isNotEmptyObject, isURL, isUUID } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
@@ -230,6 +230,7 @@ export class TokensJobsFetchMetadataService {
         metadata: sanitizePayload?.metadata as any,
         hasMetadata: isNotEmptyObject(sanitizePayload?.metadata),
         assetId: asset?.id,
+        hasAsset: isUUID(asset?.id),
       },
     );
   }

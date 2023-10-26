@@ -73,6 +73,10 @@ export class TokenEntity extends BaseEntity implements Token {
   @ManyToOne(() => TokenAssetEntity)
   @JoinColumn()
   asset?: Optional<TokenAssetEntity>;
+
+  @Index()
+  @Column({ nullable: false, type: 'bool', default: false })
+  hasAsset: boolean;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;
