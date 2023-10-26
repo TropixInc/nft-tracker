@@ -7,8 +7,12 @@ import { Optional } from 'src/common/interfaces';
 import { ContractEntity } from 'src/modules/contracts/entities/contracts.entity';
 import { TokenAssetEntity } from './tokens-assets.entity';
 
+const DELETED_AT_IS_NULL = 'deleted_at IS NULL';
 @Entity({ name: 'tokens' })
 @Index('UNIQUE_TOKEN_ADDRESS_TOKEN_ID_CHAIN', ['address', 'tokenId', 'chainId'], { unique: true })
+@Index(['lastOwnerAddressCheckAt', 'ownerAddress'], { where: DELETED_AT_IS_NULL, background: true })
+@Index(['address', 'chainId'], { where: DELETED_AT_IS_NULL, background: true })
+@Index(['hasMetadata', 'createdAt'], { where: DELETED_AT_IS_NULL, background: true })
 export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: true, type: 'text' })
   name?: Optional<string>;
@@ -36,8 +40,12 @@ export class TokenEntity extends BaseEntity implements Token {
   @Column({ nullable: true, type: 'text' })
   imageRawUrl?: Optional<string>;
 
-  @Column({ nullable: true, type: 'jsonb', default: {} })
+  @Column({ nullable: true, type: 'jsonb', default: null })
   metadata: Record<string, unknown> | null;
+
+  @Index()
+  @Column({ nullable: false, type: 'bool', default: false })
+  hasMetadata: boolean;
 
   @Index()
   @Column({ nullable: true, type: 'text', transformer: [lowercase] })
@@ -65,6 +73,10 @@ export class TokenEntity extends BaseEntity implements Token {
   @ManyToOne(() => TokenAssetEntity)
   @JoinColumn()
   asset?: Optional<TokenAssetEntity>;
+
+  @Index()
+  @Column({ nullable: false, type: 'bool', default: false })
+  hasAsset: boolean;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;

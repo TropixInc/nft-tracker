@@ -14,6 +14,7 @@ export interface Token {
   imageRawUrl?: Optional<string>;
   chainId: ChainId;
   metadata: Record<string, unknown> | null;
+  hasMetadata: boolean;
   assetId?: Optional<string>;
   asset?: Optional<TokenAsset>;
 }

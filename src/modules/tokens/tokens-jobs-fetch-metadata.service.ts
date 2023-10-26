@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AxiosError } from 'axios';
 import { Queue } from 'bull';
-import { isJSON, isURL } from 'class-validator';
+import { isJSON, isNotEmptyObject, isURL, isUUID } from 'class-validator';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
 import { isObject, isString } from 'lodash';
@@ -119,7 +119,7 @@ export class TokensJobsFetchMetadataService {
   async checkTokensWithoutMetadataForLongTime(): Promise<void> {
     const items = await this.tokenRepository
       .createQueryBuilder()
-      .where("metadata = '{}' AND created_at < NOW() - INTERVAL '1 hour'")
+      .where("has_metadata = false AND created_at < NOW() - INTERVAL '1 hour'")
       .limit(10)
       .orderBy('RANDOM()')
       .getMany();
@@ -228,7 +228,9 @@ export class TokensJobsFetchMetadataService {
         externalUrl: sanitizePayload?.externalUrl,
         imageRawUrl: sanitizePayload?.imageRawUrl,
         metadata: sanitizePayload?.metadata as any,
+        hasMetadata: isNotEmptyObject(sanitizePayload?.metadata),
         assetId: asset?.id,
+        hasAsset: isUUID(asset?.id),
       },
     );
   }
