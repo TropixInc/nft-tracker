@@ -17,6 +17,10 @@ import { LogParsed } from './interfaces';
 import { Format } from './utils/format';
 import { parallel } from 'radash';
 import { TokensTransferService } from 'src/modules/tokens/tokens-transfer.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { range } from 'lodash';
+import { SyncBlockDto } from './dto/sync-block.dto';
 
 @Injectable()
 export class EvmEventsService implements OnModuleInit {
@@ -32,6 +36,7 @@ export class EvmEventsService implements OnModuleInit {
     private readonly contractService: ContractService,
     @Inject(forwardRef(() => TokensTransferService))
     private readonly tokenTransferService: TokensTransferService,
+    @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
   ) {}
 
   async onModuleInit() {
@@ -114,6 +119,48 @@ export class EvmEventsService implements OnModuleInit {
     }
   }
 
+  @LoggerContext({ logError: true })
+  async processPreviousBlocks(chainId) {
+    const currentBlockNumber = await this.evmService.getBlockNumber(chainId);
+    const lastBlockSync = (await this.getLatestBlockNumberSync(chainId)) || currentBlockNumber;
+
+    this.logger.log(`[${chainId}] Block lasted ${lastBlockSync} and current ${currentBlockNumber}`);
+    await this.syncBlock({
+      to: currentBlockNumber,
+      from: lastBlockSync,
+      chainId,
+    });
+  }
+
+  async syncBlock(dto: SyncBlockDto) {
+    this.logger.log(`Sync block ${JSON.stringify(dto)}`);
+    const minimumTransactionConfirmation = await this.evmService.getMinimumTransactionConfirmation(dto.chainId);
+    for await (const blockNumber of range(dto.from, dto.to)) {
+      if (blockNumber <= 0) {
+        continue;
+      }
+      await this.enqueueBlockSync(dto.chainId, blockNumber, minimumTransactionConfirmation);
+    }
+  }
+
+  async getLatestBlockNumberSync(chainId: ChainId): Promise<number | null> {
+    const lastBlockNumber = await this.cacheManager.get<number>(this.formatKeyLastedBlockNumber(chainId));
+    return lastBlockNumber ? lastBlockNumber : null;
+  }
+
+  async saveLastBlockNumberSync(chainId: ChainId, blockNumber: number) {
+    const lastBlockNumber = await this.getLatestBlockNumberSync(chainId);
+    if (lastBlockNumber === null || lastBlockNumber < blockNumber) {
+      await this.cacheManager.set(this.formatKeyLastedBlockNumber(chainId), blockNumber);
+    } else {
+      this.logger.warn(`[${chainId}] This block is ${blockNumber} is not greater than lasted ${lastBlockNumber}`);
+    }
+  }
+
+  private formatKeyLastedBlockNumber(chainId: ChainId) {
+    return `last-block-syc:${chainId}`;
+  }
+
   private unsubscribe(chainId: ChainId) {
     this.subscribeChainId.delete(chainId);
   }
@@ -121,7 +168,7 @@ export class EvmEventsService implements OnModuleInit {
   private async enqueueBlockSync(chainId: ChainId, blockNumber: number, confirmations: number) {
     try {
       const blockToSync = blockNumber - confirmations;
-      this.logger.debug(`[${chainId}] Block mined ${blockNumber} to sync ${blockToSync}`);
+      this.logger.verbose(`[${chainId}] Block mined ${blockNumber} to sync ${blockToSync}`);
       await this.eventsQueue.add(
         EvmEventsJobs.SyncBlock,
         {

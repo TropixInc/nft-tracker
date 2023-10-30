@@ -24,6 +24,7 @@ export class EvmEventsProcessor implements ApplicationWorker<'syncBlock'> {
     if (this.evmService.supportChainId(job.data.chainId)) {
       this.logger.verbose(`[${job.data.chainId}] Receive block ${job.data.blockNumber} of chain`);
       await this.eventsService.getLogsByChainIdAndBlockNumber(job.data.chainId, job.data.blockNumber);
+      await this.eventsService.saveLastBlockNumberSync(job.data.chainId, job.data.blockNumber);
       this.logger.verbose(`[${job.data.chainId}] Saving lasted block sync ${job.data.blockNumber}`);
     } else {
       this.logger.verbose(`Chain ${job.data.chainId} disabled`);
