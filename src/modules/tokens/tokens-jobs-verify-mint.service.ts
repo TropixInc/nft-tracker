@@ -26,19 +26,20 @@ export class TokensJobsVerifyMintService {
     private readonly queue: Queue,
   ) {}
   async execute(jobId: string): Promise<void> {
+    const job = await this.tokenJobRepository.findOne({
+      where: {
+        id: jobId,
+        status: TokenJobStatus.Created,
+        type: TokenJobType.VerifyMint,
+        executeAt: LessThan(new Date()),
+      },
+    });
+    if (!job) {
+      this.logger.warn(`Job ${jobId} not found`);
+      return Promise.resolve();
+    }
     return runTransaction<void>(this.tokenJobRepository.manager, async (queryRunner) => {
-      const job = await this.tokenJobRepository.findOne({
-        where: {
-          id: jobId,
-          status: TokenJobStatus.Created,
-          type: TokenJobType.VerifyMint,
-          startedAt: LessThan(new Date()),
-        },
-      });
-      if (!job) {
-        return Promise.resolve();
-      }
-      this.logger.verbose(`Starting verify mint job ${job.tokensIds.join(',')}`);
+      this.logger.log(`Starting verify mint job ${job.tokensIds.join(',')}`);
       await this.tokenJobRepository.update(job.id, {
         status: TokenJobStatus.Started,
         startedAt: new Date(),
@@ -65,9 +66,9 @@ export class TokensJobsVerifyMintService {
             executeAt: new Date(),
             tokensIds: this.getNextSequentialFromTokensIds(job.tokensIds),
           });
-          this.logger.verbose(`Finished verify mint job ${job.tokensIds.join(',')}`);
+          this.logger.log(`Finished verify mint job ${job.tokensIds.join(',')}`);
         }
-        this.logger.debug(`Finished verify mint job ${job.tokensIds.join(',')} with ${countTokensFound} found`);
+        this.logger.log(`Finished verify mint job ${job.tokensIds.join(',')} with ${countTokensFound} found`);
       } catch (error) {
         this.logger.error(error);
         await this.tokenJobRepository.update(job.id, {
@@ -119,7 +120,7 @@ export class TokensJobsVerifyMintService {
         },
         {
           jobId: `${TokenJobJobs.ExecuteVerifyMintByJob}:${job.id}`,
-          attempts: 3,
+          attempts: 1,
           removeOnComplete: {
             age: 2 * 60,
             count: 1000,
