@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.10](https://github.com/TropixInc/nft-tracker/compare/v0.0.9...v0.0.10) (2023-11-01)
+
+
+### Features
+
+* **events:** synchronizing previous blocks when the pod is restarted ([12679c5](https://github.com/TropixInc/nft-tracker/commit/12679c530cadd3af4172f8d83731b1fb05cb96c8))
+
+
+### Bug Fixes
+
+* **verify mint:** changing to use `executeAt` ([b547049](https://github.com/TropixInc/nft-tracker/commit/b547049ac06a2d5be614f75e34ffe94d19a15bb0))
+
 ### [0.0.9](https://github.com/TropixInc/nft-tracker/compare/v0.0.8...v0.0.9) (2023-10-26)
 
 ### [0.0.8](https://github.com/TropixInc/nft-tracker/compare/v0.0.7...v0.0.8) (2023-10-25)
