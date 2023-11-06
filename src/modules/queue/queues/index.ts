@@ -22,8 +22,9 @@ export const Queues = [
     configKey: QueueConfigEnum.Local,
     defaultJobOptions: {
       delay: 500,
-      stackTraceLimit: 5,
+      stackTraceLimit: 2,
       removeOnComplete: true,
+      removeOnFail: true,
       attempts: 1,
       timeout: 15 * 60 * 1000,
     },

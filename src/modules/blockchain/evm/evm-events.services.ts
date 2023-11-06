@@ -114,7 +114,6 @@ export class EvmEventsService implements OnModuleInit {
       });
     } catch (error) {
       this.logger.error(`Error on block ${blockNumber} on chain ${chainId}`);
-      this.logger.error(error);
       throw error;
     }
   }
