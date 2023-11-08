@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/TropixInc/nft-tracker/compare/v0.0.11...v0.0.12) (2023-11-08)
+
+
+### Bug Fixes
+
+* **queue:** removing attempts and adding remove when finished or failed ([4bcbd47](https://github.com/TropixInc/nft-tracker/commit/4bcbd4736254f584dfecdbef211d229dd48feed8))
+
 ### [0.0.11](https://github.com/TropixInc/nft-tracker/compare/v0.0.10...v0.0.11) (2023-11-06)
 
 

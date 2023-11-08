@@ -19,7 +19,7 @@ export class EvmEventsProcessor implements ApplicationWorker<'syncBlock'> {
     private readonly evmService: EvmService,
   ) {}
 
-  @Process(EvmEventsJobs.SyncBlock)
+  @Process({ name: EvmEventsJobs.SyncBlock, concurrency: 3 })
   async syncBlockHandler(job: Job<EventSyncBlock>) {
     if (this.evmService.supportChainId(job.data.chainId)) {
       this.logger.verbose(`[${job.data.chainId}] Receive block ${job.data.blockNumber} of chain`);

@@ -220,7 +220,7 @@ export class EvmService {
       case ChainId.MOONBEAM:
         return 'https://moonbeam.api.onfinality.io/public';
       case ChainId.MOONRIVER:
-        return 'https://rpc.api.moonriver.moonbeam.network';
+        return 'https://moonriver.api.onfinality.io/public';
       case ChainId.MUMBAI:
         return 'https://rpc-mumbai.maticvigil.com';
       case ChainId.POLYGON:

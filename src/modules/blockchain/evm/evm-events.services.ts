@@ -176,11 +176,8 @@ export class EvmEventsService implements OnModuleInit {
         },
         {
           jobId: `${EvmEventsJobs.SyncBlock}:${chainId}:${blockNumber}`,
-          backoff: {
-            type: 'fixed',
-            delay: 15 * 1000,
-          },
-          attempts: Number.MAX_SAFE_INTEGER,
+          removeOnComplete: true,
+          removeOnFail: true,
         },
       );
     } catch (error) {
