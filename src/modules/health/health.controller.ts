@@ -140,7 +140,15 @@ export class HealthController extends PrometheusController {
   readinessIndicators(): (() => Promise<HealthIndicatorResult>)[] {
     const indicators = this.indicators();
 
-    return [indicators.migration, indicators.database, indicators.memory_heap, indicators.memory_rss_aloc];
+    return [
+      indicators.migration,
+      indicators.database,
+      indicators.memory_heap,
+      indicators.memory_rss_aloc,
+      indicators.blockchain,
+      indicators[LOCAL_TOKEN_JOB_KEY],
+      indicators[LOCAL_EVM_EVENTS_KEY],
+    ];
   }
 
   private getFirstError(result: HealthCheckResult): string {
