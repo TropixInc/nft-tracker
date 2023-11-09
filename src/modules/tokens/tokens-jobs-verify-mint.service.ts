@@ -120,7 +120,6 @@ export class TokensJobsVerifyMintService {
         },
         {
           jobId: `${TokenJobJobs.ExecuteVerifyMintByJob}:${job.id}`,
-          attempts: 1,
           removeOnComplete: {
             age: 2 * 60,
             count: 1000,
