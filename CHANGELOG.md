@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.13](https://github.com/TropixInc/nft-tracker/compare/v0.0.12...v0.0.13) (2023-11-09)
+
+
+### Features
+
+* **health:** adding blockchain and queue on indicators to readiness ([6c17345](https://github.com/TropixInc/nft-tracker/commit/6c17345c636cb780659d347e2089c5772bf58718))
+
 ### [0.0.12](https://github.com/TropixInc/nft-tracker/compare/v0.0.11...v0.0.12) (2023-11-08)
 
 
