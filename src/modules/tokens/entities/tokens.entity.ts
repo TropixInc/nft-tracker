@@ -6,6 +6,7 @@ import { lowercase } from 'src/modules/database/database.helpers';
 import { Optional } from 'src/common/interfaces';
 import { ContractEntity } from 'src/modules/contracts/entities/contracts.entity';
 import { TokenAssetEntity } from './tokens-assets.entity';
+import { TokenJobEntity } from './tokens-jobs.entity';
 
 const DELETED_AT_IS_NULL = 'deleted_at IS NULL';
 @Entity({ name: 'tokens' })
@@ -77,6 +78,14 @@ export class TokenEntity extends BaseEntity implements Token {
   @Index()
   @Column({ nullable: false, type: 'bool', default: false })
   hasAsset: boolean;
+
+  @Index()
+  @Column({ nullable: true, type: 'uuid' })
+  assetTokenJobId?: Optional<string>;
+
+  @ManyToOne(() => TokenJobEntity)
+  @JoinColumn()
+  assetTokenJob?: Optional<TokenJobEntity>;
 }
 
 export type TokenModel = Omit<TokenEntity, 'deletedAt'> & BaseEntity;

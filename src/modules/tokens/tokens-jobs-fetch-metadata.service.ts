@@ -216,6 +216,15 @@ export class TokensJobsFetchMetadataService {
           },
         })
       : null;
+
+    const assetTokenJob =
+      asset?.id && sanitizePayload.imageRawUrl
+        ? await this.tokenJobRepository.findOne({
+            where: {
+              assetUri: sanitizePayload.imageRawUrl,
+            },
+          })
+        : null;
     await this.tokenRepository.update(
       {
         address: params.address,
@@ -231,6 +240,7 @@ export class TokensJobsFetchMetadataService {
         hasMetadata: isNotEmptyObject(sanitizePayload?.metadata),
         assetId: asset?.id,
         hasAsset: isUUID(asset?.id),
+        assetTokenJobId: assetTokenJob?.id,
       },
     );
   }
