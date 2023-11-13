@@ -1,8 +1,8 @@
-import { Inject, Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChainId } from 'src/common/enums';
 import { AppConfig } from 'src/config/app.config';
-import { BigNumberish, ethers, formatUnits, JsonRpcProvider, WebSocketProvider } from 'ethers';
+import { BigNumberish, ethers, formatUnits, JsonRpcProvider, Network, WebSocketProvider } from 'ethers';
 import { ChainIsNotSupportedException } from '../exceptions';
 import { ConfigurationService } from 'src/modules/configuration/configuration.service';
 import { LoggerContext } from 'src/common/decorators/logger-context.decorator';
@@ -11,10 +11,9 @@ import * as ws from 'ws';
 import { cacheResolver } from 'src/common/helpers/cache.helper';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { injectCommonNetworks } from './helpers/register-network';
 
 @Injectable()
-export class EvmService implements OnApplicationBootstrap {
+export class EvmService {
   logger = new Logger(EvmService.name);
 
   private jsonRpcProvidersPool = new Map<ChainId, JsonRpcProvider>();
@@ -24,10 +23,6 @@ export class EvmService implements OnApplicationBootstrap {
     protected readonly configurationService: ConfigurationService,
     @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
   ) {}
-
-  onApplicationBootstrap() {
-    injectCommonNetworks();
-  }
 
   public async getContractAt<T>(address: string, chainId: ChainId, abi: string[]): Promise<T> {
     return new ethers.Contract(address, abi, await this.getJsonRpcProviderByChainId(chainId)) as T;
@@ -43,7 +38,11 @@ export class EvmService implements OnApplicationBootstrap {
     if (force || !this.jsonRpcProvidersPool.has(chainId)) {
       this.jsonRpcProvidersPool.get(chainId)?.removeAllListeners();
       const uri = await this.getRPCUrlOnConfigurationOrDefault(chainId);
-      const provider = new JsonRpcProvider(uri);
+      const network = Network.from({
+        chainId: +chainId,
+        name: ChainId[chainId].toLocaleLowerCase(),
+      });
+      const provider = new JsonRpcProvider(uri, network, { staticNetwork: network });
       this.jsonRpcProvidersPool.set(chainId, provider);
       return provider;
     }
