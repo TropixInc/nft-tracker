@@ -11,7 +11,7 @@ import { parallel } from 'radash';
 import { TooManyRequestsExceptionDto } from 'src/common/dtos/http-exception.dto';
 import { RequestHelpers } from 'src/common/helpers/request.helpers';
 import { Optional } from 'src/common/interfaces';
-import { ILike, LessThan, Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { sanitizeUri } from '../blockchain/evm/utils';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
@@ -212,7 +212,7 @@ export class TokensJobsFetchMetadataService {
     const asset = sanitizePayload.imageRawUrl
       ? await this.assetRepository.findOne({
           where: {
-            rawUrl: ILike(sanitizePayload.imageRawUrl),
+            rawUrl: sanitizePayload.imageRawUrl,
           },
         })
       : null;

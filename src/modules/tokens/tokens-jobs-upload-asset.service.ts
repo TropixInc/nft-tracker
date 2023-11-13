@@ -10,7 +10,7 @@ import { subMinutes } from 'date-fns';
 import { isString } from 'lodash';
 import { parallel } from 'radash';
 import { AppConfig, CloudinaryConfig } from 'src/config/app.config';
-import { ILike, In, LessThan, Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
@@ -111,7 +111,7 @@ export class TokensJobsUploadAssetService {
       const alreadyExist = await this.tokenJobRepository.findOne({
         where: {
           status: In([TokenJobStatus.Created, TokenJobStatus.Started]),
-          assetUri: ILike(item.image_raw_url),
+          assetUri: item.image_raw_url,
         },
       });
       if (alreadyExist) continue;
@@ -213,7 +213,7 @@ export class TokensJobsUploadAssetService {
     });
     await this.tokenRepository.update(
       {
-        imageRawUrl: ILike(params.rawUri),
+        imageRawUrl: params.rawUri,
       },
       {
         assetId: asset?.id,
