@@ -198,9 +198,9 @@ export class EvmService {
       case ChainId.LOCALHOST:
         return `wss://localhost:8545`;
       case ChainId.MOONBEAM:
-        return 'wss://moonbeam.api.onfinality.io/public-ws';
+        return 'wss://moonbeam.unitedbloc.com';
       case ChainId.MOONRIVER:
-        return 'wss://moonriver.api.onfinality.io/public-ws';
+        return 'wss://moonriver.unitedbloc.com';
       case ChainId.MUMBAI:
         return '';
       case ChainId.POLYGON:
@@ -222,9 +222,9 @@ export class EvmService {
       case ChainId.LOCALHOST:
         return `http://localhost:8545`;
       case ChainId.MOONBEAM:
-        return 'https://moonbeam.api.onfinality.io/public';
+        return 'https://moonbeam.unitedbloc.com';
       case ChainId.MOONRIVER:
-        return 'https://moonriver.api.onfinality.io/public';
+        return 'https://moonriver.unitedbloc.com';
       case ChainId.MUMBAI:
         return 'https://rpc-mumbai.maticvigil.com';
       case ChainId.POLYGON:
