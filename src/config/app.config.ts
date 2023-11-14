@@ -125,7 +125,7 @@ export const validationSchema = Joi.object<EnvironmentVariables, true>({
   })).cloudinary(),
   CHAIN_IDS: Joi.extend((joi) => ({
     type: 'chainArray',
-    base: joi.array().items(Joi.number().required()).min(1),
+    base: joi.array().items(Joi.number().required()),
     coerce: (value) => ({
       value: value.split(',').map((chainId) => Number(chainId.trim())),
     }),
