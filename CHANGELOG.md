@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.14](https://github.com/TropixInc/nft-tracker/compare/v0.0.13...v0.0.14) (2023-11-14)
+
+
+### Features
+
+* changing moonbeam and moonriver provider ([e115439](https://github.com/TropixInc/nft-tracker/commit/e115439b7a22bc9c52bb301d86d3a51a97a97578))
+* **ethers:** register json rpc provider with network arg ([43efa87](https://github.com/TropixInc/nft-tracker/commit/43efa87f2de3009a7362cde27eb76ce0e0661649))
+* **ethers:** register moonbeam and moonriver network ([699a734](https://github.com/TropixInc/nft-tracker/commit/699a7342f94a3e82b73f3d8dd40b2ba8b1f58173))
+* increase paginate limit ([6c647aa](https://github.com/TropixInc/nft-tracker/commit/6c647aa1e22292820758254dd42f77ed31bdccb8))
+* save asset token job on token ([598e7fa](https://github.com/TropixInc/nft-tracker/commit/598e7fa00ee02160147d40123bd45f16267cec31))
+
 ### [0.0.13](https://github.com/TropixInc/nft-tracker/compare/v0.0.12...v0.0.13) (2023-11-09)
 
 

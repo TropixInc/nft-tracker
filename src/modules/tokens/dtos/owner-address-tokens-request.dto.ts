@@ -41,6 +41,6 @@ export class OwnerAddressTokensRequestDto {
   @Transform(({ value }) => (value ? Number(value) : 10))
   @IsNumber()
   @Min(1)
-  @Max(50)
+  @Max(100)
   limit: number = 10;
 }

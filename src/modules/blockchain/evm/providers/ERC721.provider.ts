@@ -89,7 +89,6 @@ export class ERC721Contract<T extends ERC721> extends EvmService {
       this.logger.debug(`Get tokenId from ${this.address}/${this.chainId}/${tokenId}`);
       return await this.contract.tokenURI(tokenId);
     } catch (error) {
-      console.error(error);
       return await this.getUri(tokenId);
     }
   }

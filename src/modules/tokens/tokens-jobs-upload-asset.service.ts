@@ -10,7 +10,7 @@ import { subMinutes } from 'date-fns';
 import { isString } from 'lodash';
 import { parallel } from 'radash';
 import { AppConfig, CloudinaryConfig } from 'src/config/app.config';
-import { ILike, In, LessThan, Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { LocalQueueEnum, TokenJobJobs } from '../queue/enums';
 import { TokenAssetEntity } from './entities/tokens-assets.entity';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
@@ -104,17 +104,27 @@ export class TokensJobsUploadAssetService {
              LEFT JOIN contracts c ON tokens.chain_id = c.chain_id AND tokens.address ILIKE c.address
     WHERE tokens.has_asset = false
       AND c.cache_media = true
+      AND asset_token_job_id IS NULL
     GROUP BY tokens.image_raw_url
     `);
     for await (const item of items) {
       if (!item) continue;
       const alreadyExist = await this.tokenJobRepository.findOne({
         where: {
-          status: In([TokenJobStatus.Created, TokenJobStatus.Started]),
-          assetUri: ILike(item.image_raw_url),
+          assetUri: item.image_raw_url,
         },
       });
-      if (alreadyExist) continue;
+      if (alreadyExist?.id) {
+        await this.tokenRepository.update(
+          {
+            imageRawUrl: item.image_raw_url,
+          },
+          {
+            assetTokenJobId: alreadyExist.id,
+          },
+        );
+        continue;
+      }
       await this.tokensJobsService.createJob({
         tokensIds: [],
         tokensUris: [],
@@ -137,7 +147,6 @@ export class TokensJobsUploadAssetService {
       order: {
         executeAt: 'ASC',
       },
-      take: 30,
       select: {
         id: true,
       },
@@ -213,7 +222,7 @@ export class TokensJobsUploadAssetService {
     });
     await this.tokenRepository.update(
       {
-        imageRawUrl: ILike(params.rawUri),
+        imageRawUrl: params.rawUri,
       },
       {
         assetId: asset?.id,

@@ -53,6 +53,10 @@ export class TokenJobProcessor
     const jobs = [
       {
         name: TokenJobJobs.CreateFetchJobs,
+        cron: CronExpression.EVERY_MINUTE,
+      },
+      {
+        name: TokenJobJobs.CreateVerifyMintJobs,
         cron: CronExpression.EVERY_10_SECONDS,
       },
       {
@@ -129,6 +133,8 @@ export class TokenJobProcessor
       this.fetchMetadataService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.fetchOwnerAddressService.checkJobsHaveAlreadyStartedButNotFinished(),
       this.uploadAssetService.checkJobsHaveAlreadyStartedButNotFinished(),
+      this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
+      this.uploadAssetService.checkTokensWithoutMediaCache(),
     ]);
   }
 
@@ -136,14 +142,17 @@ export class TokenJobProcessor
   @LoggerContext({ logError: true })
   async createFetchJobsHandler() {
     await Promise.all([
-      this.fetchMetadataService.checkTokensWithoutMetadataForLongTime(),
-      this.uploadAssetService.checkTokensWithoutMediaCache(),
       this.fetchMetadataService.scheduleNextJobs(),
       this.fetchOwnerAddressService.scheduleNextJobs(),
       this.uploadAssetService.scheduleNextJobs(),
       this.refreshTokenService.scheduleNextJobs(),
-      this.verifyMintService.scheduleNextJobs(),
     ]);
+  }
+
+  @Process({ name: TokenJobJobs.CreateVerifyMintJobs })
+  @LoggerContext({ logError: true })
+  async createVerifyMintJobs() {
+    await this.verifyMintService.scheduleNextJobs();
   }
 
   @Process({ name: TokenJobJobs.CreateFetchOwnerAddressJobs })
