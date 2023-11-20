@@ -61,7 +61,7 @@ export class TokenJobProcessor
       },
       {
         name: TokenJobJobs.CreateFetchOwnerAddressJobs,
-        cron: CronExpression.EVERY_MINUTE,
+        cron: CronExpression.EVERY_6_HOURS,
       },
       {
         name: TokenJobJobs.CheckJobFrozen,
