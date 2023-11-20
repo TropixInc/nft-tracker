@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.15](https://github.com/TropixInc/nft-tracker/compare/v0.0.14...v0.0.15) (2023-11-20)
+
+
+### Features
+
+* increased the time it takes to check if the owner of an NFT has changed ([d693498](https://github.com/TropixInc/nft-tracker/commit/d69349801e6be0d6c7b3e6c6fe0edfb254b75710))
+
 ### [0.0.14](https://github.com/TropixInc/nft-tracker/compare/v0.0.13...v0.0.14) (2023-11-14)
 
 
