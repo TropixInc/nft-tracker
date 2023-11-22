@@ -110,8 +110,7 @@ export class TokenJobProcessor
   @Process({ name: TokenJobJobs.ExecuteFetchOwnerAddressByJob, concurrency: 1 })
   @LoggerContext({ logError: true })
   async executeFetchOwnerAddressHandler(job: Job<{ jobId: string }>) {
-    this.logger.debug(`executeFetchOwnerAddressHandler: ${job.data.jobId}`);
-    // await this.fetchOwnerAddressService.execute(job.data.jobId);
+    await this.fetchOwnerAddressService.execute(job.data.jobId);
   }
 
   @Process({ name: TokenJobJobs.ExecuteUploadAssetByJob, concurrency: 1 })
