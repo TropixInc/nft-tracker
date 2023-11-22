@@ -112,7 +112,12 @@ export class TokensJobsFetchOwnerAddressService {
                                   tokens_jobs.status IN ('created', 'started') AND tokens_jobs.type = 'fetch_owner_address'
       WHERE tokens_jobs.id IS NULL
         AND (owner_address IS NULL OR
-             (last_owner_address_check_at IS NOT NULL AND last_owner_address_check_at < NOW() - INTERVAL '7 day'))
+             (
+              last_owner_address_check_at IS NOT NULL 
+              AND last_owner_address_check_at < NOW() - INTERVAL '7 day' 
+              AND owner_address <> '0x0000000000000000000000000000000000000000'
+              )
+            )
       GROUP BY tokens.address, tokens.chain_id
       LIMIT 10`);
     for await (const item of items) {
