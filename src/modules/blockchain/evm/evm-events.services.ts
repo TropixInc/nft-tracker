@@ -21,6 +21,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { range } from 'lodash';
 import { SyncBlockDto } from './dto/sync-block.dto';
+import { EvmLogsService } from './evm-logs.service';
 
 @Injectable()
 export class EvmEventsService implements OnModuleInit {
@@ -37,10 +38,12 @@ export class EvmEventsService implements OnModuleInit {
     @Inject(forwardRef(() => TokensTransferService))
     private readonly tokenTransferService: TokensTransferService,
     @Inject(CACHE_MANAGER) protected readonly cacheManager: Cache,
+    private readonly evmLogsService: EvmLogsService,
   ) {}
 
   async onModuleInit() {
     await this.syncLocalCache();
+    this.getLogsByChainIdAndBlockNumber(ChainId.MOONBEAM, 4924160);
   }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
@@ -102,8 +105,7 @@ export class EvmEventsService implements OnModuleInit {
   async getLogsByChainIdAndBlockNumber(chainId: ChainId, blockNumber: number) {
     try {
       this.logger.verbose(`Get log ${blockNumber} on chain ${chainId}`);
-      const provider = await this.evmService.getJsonRpcProviderByChainId(chainId);
-      const logs = await provider.getLogs({ fromBlock: blockNumber, toBlock: blockNumber });
+      const logs = await this.evmLogsService.getLogs(chainId, { fromBlock: blockNumber, toBlock: blockNumber });
       const block = await this.evmService.getBlock(chainId, blockNumber);
       const logsProcessed = await this.processLogs(chainId, logs, block.timestamp);
       parallel(5, logsProcessed, async (log) => {

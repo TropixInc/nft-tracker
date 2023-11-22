@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { Transaction } from 'ethers';
+import { AddressLike, BlockTag, TopicFilter, Transaction } from 'ethers';
 import { ChainId } from 'src/common/enums';
 
 export interface EventSyncBlock {
@@ -45,4 +45,11 @@ export interface JsonRpcError {
   method: string;
   transactionHash: string;
   transaction?: Transaction;
+}
+
+export interface GetLogs {
+  fromBlock: BlockTag;
+  toBlock: BlockTag;
+  address?: AddressLike | Array<AddressLike>;
+  topics?: TopicFilter;
 }
