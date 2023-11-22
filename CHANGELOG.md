@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.16](https://github.com/TropixInc/nft-tracker/compare/v0.0.15...v0.0.16) (2023-11-22)
+
+
+### Features
+
+* creating structure to fetch logs from multiple providers ([5798685](https://github.com/TropixInc/nft-tracker/commit/5798685575df25718dd72c39e69b6cd0a6ac4fb9))
+* **fetch owner:** disable execute ([da68006](https://github.com/TropixInc/nft-tracker/commit/da6800610ab561d0d59060b480dc9b72dba80a77))
+* **owner address:** get owner when token is transferred direct onn blockchain ([44c06ec](https://github.com/TropixInc/nft-tracker/commit/44c06ec74c523423d1aeae336c01784c8cf61f97))
+* **owner address:** ignore when owner is address zero ([05fe355](https://github.com/TropixInc/nft-tracker/commit/05fe35564f257dab05ca6fec2da26fafa551c26c))
+* **owner address:** returning zero address when contract reverses call ([c83464d](https://github.com/TropixInc/nft-tracker/commit/c83464da8799578d43286dcf37f7053bd0f12a87))
+
 ### [0.0.15](https://github.com/TropixInc/nft-tracker/compare/v0.0.14...v0.0.15) (2023-11-20)
 
 

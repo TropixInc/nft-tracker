@@ -12,6 +12,8 @@ import { EvmService } from '../evm.service';
 import { ERC721 } from '../interfaces/ERC721';
 import erc721Abi from '../static/erc721.abi.json';
 import { isIPFSHash } from '../utils';
+import { AddressZero } from '@ethersproject/constants';
+import { JsonRpcError } from '../interfaces';
 
 @Injectable()
 export class ERC721Provider extends EvmService {
@@ -78,9 +80,18 @@ export class ERC721Contract<T extends ERC721> extends EvmService {
   async getOwnerOf(tokenId: BigNumberish): Promise<Optional<string>> {
     try {
       this.logger.verbose(`Get ownerOf from ${this.address}/${this.chainId}/${tokenId}`);
+      return await this.ownerOf(tokenId);
+    } catch (error) {
+      if ((error?.error?.stack || error?.stack)?.includes('execution reverted')) return AddressZero;
+      return null;
+    }
+  }
+
+  async ownerOf(tokenId: BigNumberish): Promise<Optional<string>> {
+    try {
       return await this.contract.ownerOf(tokenId);
     } catch (error) {
-      return null;
+      throw this.handleJsonRpcError(error);
     }
   }
 
@@ -149,5 +160,24 @@ export class ERC721Contract<T extends ERC721> extends EvmService {
       return `https://ipfs.io/ipfs/${uri}`;
     }
     return uri;
+  }
+
+  public handleJsonRpcError(error: any | Error): Error {
+    if (error) {
+      const err = error as JsonRpcError;
+
+      const type = `${err.method || err.code}`;
+      const msg = `${type}: ${err.error?.error?.message || err.error?.message || err.reason || err.code}`;
+      const newError = new Error(msg);
+      newError.stack = err?.error?.stack || error.stack;
+
+      return newError;
+    }
+
+    if (error instanceof Error) {
+      return error;
+    }
+
+    return new Error(JSON.stringify(error));
   }
 }
