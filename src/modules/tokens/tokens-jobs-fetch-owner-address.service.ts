@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChainId } from 'common/enums';
 import { subMinutes } from 'date-fns';
-import { LessThan, Not, Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { TokenJobEntity } from './entities/tokens-jobs.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobStatus, TokenJobType } from './enums';
@@ -54,7 +54,6 @@ export class TokensJobsFetchOwnerAddressService {
               address: job.address!,
               chainId: job.chainId!,
               tokenId,
-              ownerAddress: Not(ownerAddress?.toLowerCase()),
             },
             {
               ownerAddress: ownerAddress?.toLowerCase(),

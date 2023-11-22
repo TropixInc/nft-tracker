@@ -1,12 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isString } from 'lodash';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { TokenTransferEntity } from './entities/tokens-transfer.entity';
 import { TokenEntity } from './entities/tokens.entity';
 import { TokenJobType } from './enums';
 import { TokenHistoryParams } from './interfaces';
 import { TokensJobsService } from './tokens-jobs.service';
+import { ERC721Provider } from '../blockchain/evm/providers/ERC721.provider';
 
 @Injectable()
 export class TokensTransferService {
@@ -17,6 +18,7 @@ export class TokensTransferService {
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
     private readonly tokensJobsService: TokensJobsService,
+    private eRC721Provider: ERC721Provider,
   ) {}
 
   async createHistory(params: TokenHistoryParams): Promise<void> {
@@ -37,7 +39,6 @@ export class TokensTransferService {
       transactionIndex: params.transactionIndex,
       transferredAt: new Date(params.timestamp * 1000),
     });
-    const ownerAddress = params.args.to?.toLowerCase();
     const isIndexIsGreaterOtherRegistered =
       historyByTransaction.some((tx) => tx.transactionIndex > params.transactionIndex) === false;
 
@@ -55,11 +56,12 @@ export class TokensTransferService {
         type: TokenJobType.VerifyMint,
         tokensIds: [params.args.tokenId.toBigInt()].map(String),
       });
-    } else if (isString(ownerAddress) && isIndexIsGreaterOtherRegistered) {
+    } else if (isString(params.args.to?.toLowerCase()) && isIndexIsGreaterOtherRegistered) {
+      const contract = await this.eRC721Provider.create(params.address.toLowerCase(), params.chainId);
+      const ownerAddress = await contract.getOwnerOf(params.args.tokenId?.toString());
       await this.tokenRepository.update(
         {
           id: tokenExist.id,
-          ownerAddress: Not(ownerAddress),
         },
         {
           ownerAddress: ownerAddress,
