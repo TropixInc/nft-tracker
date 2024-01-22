@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.17](https://github.com/TropixInc/nft-tracker/compare/v0.0.16...v0.0.17) (2024-01-22)
+
+
+### Features
+
+* adding log to identify which indicator is in error ([25ed438](https://github.com/TropixInc/nft-tracker/commit/25ed43894d028062dea55c9aec61fa40dad14e83))
+
 ### [0.0.16](https://github.com/TropixInc/nft-tracker/compare/v0.0.15...v0.0.16) (2023-11-22)
 
 

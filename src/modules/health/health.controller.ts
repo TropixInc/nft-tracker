@@ -105,6 +105,7 @@ export class HealthController extends PrometheusController {
     const check = await this.wrapCheckIndicators(this.readinessIndicators());
 
     if (check.status !== 'ok') {
+      this.logger.error(this.getFirstError(check));
       throw new ServiceUnavailableException(`Service is not healthy: ${this.getFirstError(check)}`);
     }
   }
