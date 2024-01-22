@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.18](https://github.com/TropixInc/nft-tracker/compare/v0.0.17...v0.0.18) (2024-01-22)
+
+
+### Bug Fixes
+
+* **health:** disabled readiness temporary ([48680ca](https://github.com/TropixInc/nft-tracker/commit/48680cad4b9d2ab232a71f22d16d2a7fc7cebcdf))
+
 ### [0.0.17](https://github.com/TropixInc/nft-tracker/compare/v0.0.16...v0.0.17) (2024-01-22)
 
 
