@@ -80,10 +80,12 @@ export class EvmService {
       this.cacheManager,
       `getBlock:${chainId}:${blockNumber}`,
       async () => {
+        this.logger.log(`getBlock [${chainId}] / '${blockNumber}'`);
         const provider = await this.getJsonRpcProviderByChainId(chainId);
         const block = await provider.getBlock(blockNumber);
         if (!block) throw new Error(`Block ${blockNumber} not found`);
         const format = (v: BigNumberish) => formatUnits(v, 'gwei');
+        this.logger.log(`getBlock [${chainId}] / '${blockNumber} done!'`);
         return {
           hash: block.hash,
           parentHash: block.parentHash,
@@ -98,7 +100,7 @@ export class EvmService {
           baseFeePerGas: block.baseFeePerGas ? format(block.baseFeePerGas) : block.baseFeePerGas?.toString(),
         };
       },
-      { ttl: 60 },
+      { ttl: 60, asyncCaching: true },
     );
   }
 
