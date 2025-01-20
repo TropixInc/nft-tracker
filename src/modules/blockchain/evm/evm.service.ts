@@ -76,16 +76,17 @@ export class EvmService {
   }
 
   async getBlock(chainId: number, blockNumber: number) {
+    this.logger.log(`[${chainId}] calling getBlock for '${blockNumber}'`);
     return await cacheResolver(
       this.cacheManager,
       `getBlock:${chainId}:${blockNumber}`,
       async () => {
-        this.logger.log(`getBlock [${chainId}] / '${blockNumber}'`);
+        this.logger.log(`[${chainId}] calling getBlock not cached '${blockNumber}'`);
         const provider = await this.getJsonRpcProviderByChainId(chainId);
         const block = await provider.getBlock(blockNumber);
         if (!block) throw new Error(`Block ${blockNumber} not found`);
         const format = (v: BigNumberish) => formatUnits(v, 'gwei');
-        this.logger.log(`getBlock [${chainId}] / '${blockNumber} done!'`);
+        this.logger.log(`[${chainId}] calling getBlock done for '${blockNumber}'`);
         return {
           hash: block.hash,
           parentHash: block.parentHash,
