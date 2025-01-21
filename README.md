@@ -121,6 +121,7 @@ After this registration, NFTs are available for querying through 3 endpoints, as
 
 ![NFTs](/docs/images/nfts.png "NFTs endpoints")
 
+
 All three resources provide the same response format.
 
 
