@@ -101,7 +101,7 @@ export class EvmService {
           baseFeePerGas: block.baseFeePerGas ? format(block.baseFeePerGas) : block.baseFeePerGas?.toString(),
         };
       },
-      { ttl: 60, asyncCaching: true },
+      { ttl: 60 },
     );
   }
 
