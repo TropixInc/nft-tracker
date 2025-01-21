@@ -180,6 +180,7 @@ export class EvmEventsService implements OnModuleInit {
           jobId: `${EvmEventsJobs.SyncBlock}:${chainId}:${blockNumber}`,
           removeOnComplete: true,
           removeOnFail: true,
+          timeout: 3 * 60 * 1000,
         },
       );
     } catch (error) {
